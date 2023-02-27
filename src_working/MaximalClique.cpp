@@ -2,8 +2,8 @@
 
 #include <vector>
 
-std::vector<int> getMaximalClique(const std::vector<std::vector<int>>& adjs,
-                                  int N) {
+std::vector<int> HRG_CLIQUE::getMaximalClique(
+    const std::vector<std::vector<int>>& adjs, const int N) {
     // sort the vertices by degree in descending order using counting sort
     // time complexity: O(N)
     std::vector<std::vector<int>> degrees(N + 1);
@@ -17,7 +17,7 @@ std::vector<int> getMaximalClique(const std::vector<std::vector<int>>& adjs,
         }
     }
 
-    // greedy algorithm
+    // choose vertices greedily
     std::vector<int> clique;
     std::vector<int> numCliqueNeighbor(N + 1, 0);
 

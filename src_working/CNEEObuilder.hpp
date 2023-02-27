@@ -8,8 +8,8 @@ namespace HRG_CLIQUE {
 class CNEEObuilder {
    public:
     CNEEObuilder(std::vector<std::vector<int>>& adjs, int N, int version = 2);
-    std::vector<std::pair<int, int>> getCNEEO();
-    std::vector<std::pair<int, int>> getFails();
+    std::vector<std::pair<int, int>>& getCNEEO();
+    std::vector<std::pair<int, int>>& getFails();
 
    private:
     int N;

@@ -8,6 +8,6 @@ namespace HRG_CLIQUE {
 // using greedy algorithm with the order of degree in descending order
 // time complexity: O(N+M)
 std::vector<int> getMaximalClique(const std::vector<std::vector<int>>& adjs,
-                                  int N);
+                                  const int N);
 
 }  // namespace HRG_CLIQUE
