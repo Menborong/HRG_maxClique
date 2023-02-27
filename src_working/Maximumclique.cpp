@@ -611,20 +611,24 @@ std::vector<int> HRG_CLIQUE::getMaxClique(
     // with geometry
     if (geometry.size()) {
         switch (version) {
-            case 0:  // optimized version (= ver.4)
+            case 0:
+                // optimized version (= ver.4)
                 _maxCliqueGeoV4(adjs, N, geometry, R);
                 break;
-            case 1:  // original version
+            case 1:
+                // original version
                 _maxCliqueGeoV1(adjs, N, geometry, R);
                 break;
-            case 2:  // reduction version
+            case 2:
+                // reduction version
                 _maxCliqueGeoV2(adjs, N, geometry, R);
                 break;
-            case 3:  // reduction + skip low degree vertices
+            case 3:
+                // reduction + skip low degree vertices
                 _maxCliqueGeoV3(adjs, N, geometry, R);
                 break;
-            case 4:  // reduction + skip low degree vertices + skip +
-                     // edge ordering
+            case 4:
+                // reduction + skip low degree vertices + skip + edge ordering
                 _maxCliqueGeoV4(adjs, N, geometry, R);
                 break;
 
@@ -635,13 +639,16 @@ std::vector<int> HRG_CLIQUE::getMaxClique(
     // without geometry
     else {
         switch (version) {
-            case 0:  // optimized version (= ver. 2)
+            case 0:
+                // optimized version (= ver. 2)
                 _maxCliqueNoGeoV2(adjs, N);
                 break;
-            case 1:  // original version (CNEEO w/ reduction)
+            case 1:
+                // original version (CNEEO w/ reduction)
                 _maxCliqueNoGeoV1(adjs, N);
                 break;
-            case 2:  // optimized CNEEO construction vertion
+            case 2:
+                // optimized CNEEO construction vertion
                 _maxCliqueNoGeoV2(adjs, N);
                 break;
             default:

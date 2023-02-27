@@ -17,6 +17,9 @@ struct Edge {
     Edge(int u, int v, double d) : u(u), v(v), d(d) {}
 };
 
+/// @brief calculate the distance between two nodes in the hyperbolic plane
+/// @param a,b input nodes
+/// @return distance between a and b
 double HRG_CLIQUE::getDist(const Node& a, const Node& b) {
     if (a.phi == b.phi) return abs(a.r - b.r);
     double delta = M_PI - abs(M_PI - abs(a.phi - b.phi));
