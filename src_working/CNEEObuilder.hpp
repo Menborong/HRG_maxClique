@@ -7,9 +7,10 @@
 namespace HRG_CLIQUE {
 class CNEEObuilder {
    public:
+    CNEEObuilder(){};  // default constructor for non initialized CNEEObuilder
     CNEEObuilder(std::vector<std::vector<int>>& adjs, int N, int version = 2);
-    std::vector<std::pair<int, int>>& getCNEEO();
-    std::vector<std::pair<int, int>>& getFails();
+    std::vector<std::pair<int, int>>& getCNEEO() { return CNEEO; }
+    std::vector<std::pair<int, int>>& getFails() { return fails; }
 
    private:
     int N;
@@ -35,18 +36,18 @@ class CNEEObuilder {
     void getCommonNeighbors(int u, int v);
     void clearCommonCache(int u, int v);
     /**
-     * @brief chkCoBip: check if the current graph (V) is a co-bipartite graph
+     * @brief check if the current graph (V) is a co-bipartite graph
      */
     bool chkCoBip();
     /**
-     * @brief CNEEO_ver1: basic version of constructing CNEEO
+     * @brief basic version of constructing CNEEO
      * @details time complexity: O(N^2 M^2), loop until no more edges can be
      * added
      */
     void CNEEO_ver1();
 
     /**
-     * @brief CNEEO_ver2: optimized version of constructing CNEEO
+     * @brief optimized version of constructing CNEEO
      * @details time complexity: O(N^2 M^2), only edges that have potential to
      * be added are considered
      */

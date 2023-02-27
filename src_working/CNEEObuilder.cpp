@@ -37,14 +37,6 @@ HRG_CLIQUE::CNEEObuilder::CNEEObuilder(std::vector<std::vector<int>> &adjs,
     }
 }
 
-std::vector<std::pair<int, int>> HRG_CLIQUE::CNEEObuilder::getCNEEO() {
-    return CNEEO;
-}
-
-std::vector<std::pair<int, int>> HRG_CLIQUE::CNEEObuilder::getFails() {
-    return fails;
-}
-
 void HRG_CLIQUE::CNEEObuilder::getCommonNeighbors(int u, int v) {
     // find common neighbors
     V.clear();
