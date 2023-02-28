@@ -8,16 +8,70 @@
 #include "MaximalClique.hpp"
 #include "reduction.hpp"
 
-std::vector<int> HRG_CLIQUE::_maxCliqueNoGeoV1(
-    const std::vector<std::vector<int>>& adjs, const int N) {
+void HRG_CLIQUE::MaxClique::run() {
+    // initalize solution
+    maxClique = vector<int>();
+    failedEdges = vector<std::pair<int, int>>();
+
+    // with geometry
+    if (hasGeo) {
+        switch (version) {
+            case 0:
+                // optimized version (= ver.4)
+                maxCliqueGeoV4();
+                break;
+            case 1:
+                // original version
+                maxCliqueGeoV1();
+                break;
+            case 2:
+                // reduction version
+                maxCliqueGeoV2();
+                break;
+            case 3:
+                // reduction + skip low degree vertices
+                maxCliqueGeoV3();
+                break;
+            case 4:
+                // reduction + skip low degree vertices + skip + edge ordering
+                maxCliqueGeoV4();
+                break;
+
+            default:
+                assert(false);
+        }
+    }
+    // without geometry
+    else {
+        switch (version) {
+            case 0:
+                // optimized version (= ver. 2)
+                maxCliqueNoGeoV2();
+                break;
+            case 1:
+                // original version (CNEEO w/ reduction)
+                maxCliqueNoGeoV1();
+                break;
+            case 2:
+                // optimized CNEEO construction vertion
+                maxCliqueNoGeoV2();
+                break;
+            default:
+                assert(false);
+        }
+    }
+}
+
+void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV1() {
     // initalize solution
     std::vector<int> init_solution = getMaximalClique(adjs, N);
-    std::vector<int> solution = init_solution;
+    maxClique = init_solution;
 
     // reduction
-    Reduction red(adjs, N, solution.size());
+    Reduction red(adjs, N, maxClique.size());
 
     std::vector<std::vector<int>> adjs_red = red.getAdjs_red();
+    std::vector<int> bwdId = red.getBwdId();
     int redSize = red.getRedSize();
 
     // construct CNEEO
@@ -39,19 +93,19 @@ std::vector<int> HRG_CLIQUE::_maxCliqueNoGeoV1(
         int v = CNEEO[i].second;
         newAdjs[u].push_back(v);
         newAdjs[v].push_back(u);
-        if (newAdjs[u].size() < solution.size()) continue;
-        if (newAdjs[v].size() < solution.size()) continue;
+        if (newAdjs[u].size() < maxClique.size()) continue;
+        if (newAdjs[v].size() < maxClique.size()) continue;
 
         // collect all common neighbor vertices
         std::vector<int> vertices;
         for (int k : newAdjs[u]) {
             if (k == v) continue;
-            if (newAdjs[k].size() < solution.size()) continue;
+            if (newAdjs[k].size() < maxClique.size()) continue;
             commonCache[k]++;
         }
         for (int k : newAdjs[v]) {
             if (k == u) continue;
-            if (newAdjs[k].size() < solution.size()) continue;
+            if (newAdjs[k].size() < maxClique.size()) continue;
             commonCache[k]++;
             if (commonCache[k] == 2) {
                 vertices.push_back(k);
@@ -59,7 +113,7 @@ std::vector<int> HRG_CLIQUE::_maxCliqueNoGeoV1(
         }
 
         // |vertices|+2 <= |solution|: can not be a clique, skip
-        if (vertices.size() + 2 <= solution.size()) {
+        if (vertices.size() + 2 <= maxClique.size()) {
             // clear commonCache
             for (int k : newAdjs[u]) {
                 if (k == v) continue;
@@ -113,8 +167,8 @@ std::vector<int> HRG_CLIQUE::_maxCliqueNoGeoV1(
         candidate.push_back(v);
 
         // update solution
-        if (candidate.size() > solution.size()) {
-            solution = candidate;
+        if (candidate.size() > maxClique.size()) {
+            maxClique = candidate;
         }
 
         // clear cobipartite graph
@@ -124,26 +178,30 @@ std::vector<int> HRG_CLIQUE::_maxCliqueNoGeoV1(
     }
 
     // restore the vertex number
-    if (solution.size() > init_solution.size()) {
-        for (int& v : solution) {
-            std::vector<int> bwdId = red.getBwdId();
+    if (maxClique.size() > init_solution.size()) {
+        for (int& v : maxClique) {
             v = bwdId[v];
         }
     }
 
-    return solution;
+    // get failed edges & restore the vertex number
+    failedEdges = CNEEObuild.getFails();
+    for (auto& e : failedEdges) {
+        e.first = bwdId[e.first];
+        e.second = bwdId[e.second];
+    }
 }
 
-std::vector<int> HRG_CLIQUE::_maxCliqueNoGeoV2(
-    const std::vector<std::vector<int>>& adjs, const int N) {
+void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV2() {
     // initalize solution
     std::vector<int> init_solution = getMaximalClique(adjs, N);
-    std::vector<int> solution = init_solution;
+    maxClique = init_solution;
 
     // reduction
-    Reduction red(adjs, N, solution.size());
+    Reduction red(adjs, N, maxClique.size());
 
     std::vector<std::vector<int>> adjs_red = red.getAdjs_red();
+    std::vector<int> bwdId = red.getBwdId();
     int redSize = red.getRedSize();
 
     // construct CNEEO
@@ -165,19 +223,19 @@ std::vector<int> HRG_CLIQUE::_maxCliqueNoGeoV2(
         int v = CNEEO[i].second;
         newAdjs[u].push_back(v);
         newAdjs[v].push_back(u);
-        if (newAdjs[u].size() < solution.size()) continue;
-        if (newAdjs[v].size() < solution.size()) continue;
+        if (newAdjs[u].size() < maxClique.size()) continue;
+        if (newAdjs[v].size() < maxClique.size()) continue;
 
         // collect all common neighbor vertices
         std::vector<int> vertices;
         for (int k : newAdjs[u]) {
             if (k == v) continue;
-            if (newAdjs[k].size() < solution.size()) continue;
+            if (newAdjs[k].size() < maxClique.size()) continue;
             commonCache[k]++;
         }
         for (int k : newAdjs[v]) {
             if (k == u) continue;
-            if (newAdjs[k].size() < solution.size()) continue;
+            if (newAdjs[k].size() < maxClique.size()) continue;
             commonCache[k]++;
             if (commonCache[k] == 2) {
                 vertices.push_back(k);
@@ -185,7 +243,7 @@ std::vector<int> HRG_CLIQUE::_maxCliqueNoGeoV2(
         }
 
         // |vertices|+2 <= |solution|: can not be a clique, skip
-        if (vertices.size() + 2 <= solution.size()) {
+        if (vertices.size() + 2 <= maxClique.size()) {
             // clear commonCache
             for (int k : newAdjs[u]) {
                 if (k == v) continue;
@@ -239,8 +297,8 @@ std::vector<int> HRG_CLIQUE::_maxCliqueNoGeoV2(
         candidate.push_back(v);
 
         // update solution
-        if (candidate.size() > solution.size()) {
-            solution = candidate;
+        if (candidate.size() > maxClique.size()) {
+            maxClique = candidate;
         }
 
         // clear cobipartite graph
@@ -250,21 +308,21 @@ std::vector<int> HRG_CLIQUE::_maxCliqueNoGeoV2(
     }
 
     // restore the vertex number
-    if (solution.size() > init_solution.size()) {
-        for (int& v : solution) {
-            std::vector<int> bwdId = red.getBwdId();
+    if (maxClique.size() > init_solution.size()) {
+        for (int& v : maxClique) {
             v = bwdId[v];
         }
     }
 
-    return solution;
+    // get failed edges & restore the vertex number
+    failedEdges = CNEEObuild.getFails();
+    for (auto& e : failedEdges) {
+        e.first = bwdId[e.first];
+        e.second = bwdId[e.second];
+    }
 }
 
-std::vector<int> HRG_CLIQUE::_maxCliqueGeoV1(
-    const std::vector<std::vector<int>>& adjs, const int N,
-    const std::vector<Node>& geometry, const double R) {
-    std::vector<int> solution;
-
+void HRG_CLIQUE::MaxClique::maxCliqueGeoV1() {
     // this adjs matrix is reused for the efficiency
     std::vector<std::vector<int>> cobipartite(N + 1);
 
@@ -280,7 +338,7 @@ std::vector<int> HRG_CLIQUE::_maxCliqueGeoV1(
             int tar = (adjs[u].size() < adjs[v].size()) ? u : v;
             for (int k : adjs[tar]) {
                 if (k == u || k == v) continue;
-                if (adjs[k].size() < solution.size()) continue;
+                if (adjs[k].size() < maxClique.size()) continue;
                 if (getDist(geometry[u], geometry[k]) > d ||
                     getDist(geometry[v], geometry[k]) > d)
                     continue;
@@ -304,8 +362,8 @@ std::vector<int> HRG_CLIQUE::_maxCliqueGeoV1(
             candidate.push_back(v);
 
             // update solution
-            if (candidate.size() > solution.size()) {
-                solution = candidate;
+            if (candidate.size() > maxClique.size()) {
+                maxClique = candidate;
             }
 
             // clear cobipartite graph
@@ -314,21 +372,18 @@ std::vector<int> HRG_CLIQUE::_maxCliqueGeoV1(
             }
         }
     }
-
-    return solution;
 }
 
-std::vector<int> HRG_CLIQUE::_maxCliqueGeoV2(
-    const std::vector<std::vector<int>>& adjs, const int N,
-    const std::vector<Node>& geometry, const double R) {
+void HRG_CLIQUE::MaxClique::maxCliqueGeoV2() {
     // initalize solution
     std::vector<int> init_solution = getMaximalClique(adjs, N);
-    std::vector<int> solution = init_solution;
+    maxClique = init_solution;
 
     // reduction
-    Reduction red(adjs, geometry, R, N, solution.size());
+    Reduction red(adjs, geometry, R, N, maxClique.size());
 
     std::vector<std::vector<int>> adjs_red = red.getAdjs_red();
+    std::vector<int> bwdId = red.getBwdId();
     int redSize = red.getRedSize();
     std::vector<Node> geo_red = red.getGeo_red();
 
@@ -371,8 +426,8 @@ std::vector<int> HRG_CLIQUE::_maxCliqueGeoV2(
             candidate.push_back(v);
 
             // update solution
-            if (candidate.size() > solution.size()) {
-                solution = candidate;
+            if (candidate.size() > maxClique.size()) {
+                maxClique = candidate;
             }
 
             // clear cobipartite graph
@@ -383,27 +438,23 @@ std::vector<int> HRG_CLIQUE::_maxCliqueGeoV2(
     }
 
     // restore the vertex number
-    if (solution.size() > init_solution.size()) {
-        std::vector<int> bwdId = red.getBwdId();
-        for (int& v : solution) {
+    if (maxClique.size() > init_solution.size()) {
+        for (int& v : maxClique) {
             v = bwdId[v];
         }
     }
-
-    return solution;
 }
 
-std::vector<int> HRG_CLIQUE::_maxCliqueGeoV3(
-    const std::vector<std::vector<int>>& adjs, const int N,
-    const std::vector<Node>& geometry, const double R) {
+void HRG_CLIQUE::MaxClique::maxCliqueGeoV3() {
     // initalize solution
     std::vector<int> init_solution = getMaximalClique(adjs, N);
-    std::vector<int> solution = init_solution;
+    maxClique = init_solution;
 
     // reduction
-    Reduction red(adjs, geometry, R, N, solution.size());
+    Reduction red(adjs, geometry, R, N, maxClique.size());
 
     std::vector<std::vector<int>> adjs_red = red.getAdjs_red();
+    std::vector<int> bwdId = red.getBwdId();
     int redSize = red.getRedSize();
     std::vector<Node> geo_red = red.getGeo_red();
 
@@ -412,9 +463,9 @@ std::vector<int> HRG_CLIQUE::_maxCliqueGeoV3(
 
     // main iteration
     for (int u = 1; u <= redSize; u++) {
-        if (adjs_red[u].size() < solution.size()) continue;
+        if (adjs_red[u].size() < maxClique.size()) continue;
         for (int v : adjs_red[u]) {
-            if (adjs_red[v].size() < solution.size()) continue;
+            if (adjs_red[v].size() < maxClique.size()) continue;
             double d = getDist(geo_red[u], geo_red[v]);
             if (d > R) continue;
             // construct co-bipartite graph
@@ -425,7 +476,7 @@ std::vector<int> HRG_CLIQUE::_maxCliqueGeoV3(
             int tar = (adjs_red[u].size() < adjs_red[v].size()) ? u : v;
             for (int k : adjs_red[tar]) {
                 if (k == u || k == v) continue;
-                if (adjs_red[k].size() < solution.size()) continue;
+                if (adjs_red[k].size() < maxClique.size()) continue;
                 if (getDist(geo_red[u], geo_red[k]) > d ||
                     getDist(geo_red[v], geo_red[k]) > d)
                     continue;
@@ -449,8 +500,8 @@ std::vector<int> HRG_CLIQUE::_maxCliqueGeoV3(
             candidate.push_back(v);
 
             // update solution
-            if (candidate.size() > solution.size()) {
-                solution = candidate;
+            if (candidate.size() > maxClique.size()) {
+                maxClique = candidate;
             }
 
             // clear cobipartite graph
@@ -461,27 +512,23 @@ std::vector<int> HRG_CLIQUE::_maxCliqueGeoV3(
     }
 
     // restore the vertex number
-    if (solution.size() > init_solution.size()) {
-        std::vector<int> bwdId = red.getBwdId();
-        for (int& v : solution) {
+    if (maxClique.size() > init_solution.size()) {
+        for (int& v : maxClique) {
             v = bwdId[v];
         }
     }
-
-    return solution;
 }
 
-std::vector<int> HRG_CLIQUE::_maxCliqueGeoV4(
-    const std::vector<std::vector<int>>& adjs, const int N,
-    const std::vector<Node>& geometry, const double R) {
+void HRG_CLIQUE::MaxClique::maxCliqueGeoV4() {
     // initalize solution
     std::vector<int> init_solution = getMaximalClique(adjs, N);
-    std::vector<int> solution = init_solution;
+    maxClique = init_solution;
 
     // reduction
-    Reduction red(adjs, geometry, R, N, solution.size());
+    Reduction red(adjs, geometry, R, N, maxClique.size());
 
     std::vector<std::vector<int>> adjs_red = red.getAdjs_red();
+    std::vector<int> bwdId = red.getBwdId();
     int redSize = red.getRedSize();
     std::vector<Node> geo_red = red.getGeo_red();
 
@@ -510,19 +557,19 @@ std::vector<int> HRG_CLIQUE::_maxCliqueGeoV4(
         int v = edges[i].v;
         newAdjs[u].push_back(v);
         newAdjs[v].push_back(u);
-        if (newAdjs[u].size() < solution.size()) continue;
-        if (newAdjs[v].size() < solution.size()) continue;
+        if (newAdjs[u].size() < maxClique.size()) continue;
+        if (newAdjs[v].size() < maxClique.size()) continue;
 
         // collect all common neighbor vertices
         std::vector<int> vertices;
         for (int k : newAdjs[u]) {
             if (k == v) continue;
-            if (newAdjs[k].size() < solution.size()) continue;
+            if (newAdjs[k].size() < maxClique.size()) continue;
             commonCache[k]++;
         }
         for (int k : newAdjs[v]) {
             if (k == u) continue;
-            if (newAdjs[k].size() < solution.size()) continue;
+            if (newAdjs[k].size() < maxClique.size()) continue;
             commonCache[k]++;
             if (commonCache[k] == 2) {
                 vertices.push_back(k);
@@ -530,7 +577,7 @@ std::vector<int> HRG_CLIQUE::_maxCliqueGeoV4(
         }
 
         // |vertices|+2 <= |solution|: can not be a larger clique, skip
-        if (vertices.size() + 2 <= solution.size()) {
+        if (vertices.size() + 2 <= maxClique.size()) {
             // clear commonCache
             for (int k : newAdjs[u]) {
                 if (k == v) continue;
@@ -584,8 +631,8 @@ std::vector<int> HRG_CLIQUE::_maxCliqueGeoV4(
         candidate.push_back(v);
 
         // update solution
-        if (candidate.size() > solution.size()) {
-            solution = candidate;
+        if (candidate.size() > maxClique.size()) {
+            maxClique = candidate;
         }
 
         // clear cobipartite graph
@@ -595,64 +642,9 @@ std::vector<int> HRG_CLIQUE::_maxCliqueGeoV4(
     }
 
     // restore the vertex number
-    if (solution.size() > init_solution.size()) {
-        std::vector<int> bwdId = red.getBwdId();
-        for (int& v : solution) {
+    if (maxClique.size() > init_solution.size()) {
+        for (int& v : maxClique) {
             v = bwdId[v];
-        }
-    }
-
-    return solution;
-}
-
-std::vector<int> HRG_CLIQUE::getMaxClique(
-    const std::vector<std::vector<int>>& adjs, const int N, const int version,
-    const std::vector<Node>& geometry, const double R) {
-    // with geometry
-    if (geometry.size()) {
-        switch (version) {
-            case 0:
-                // optimized version (= ver.4)
-                _maxCliqueGeoV4(adjs, N, geometry, R);
-                break;
-            case 1:
-                // original version
-                _maxCliqueGeoV1(adjs, N, geometry, R);
-                break;
-            case 2:
-                // reduction version
-                _maxCliqueGeoV2(adjs, N, geometry, R);
-                break;
-            case 3:
-                // reduction + skip low degree vertices
-                _maxCliqueGeoV3(adjs, N, geometry, R);
-                break;
-            case 4:
-                // reduction + skip low degree vertices + skip + edge ordering
-                _maxCliqueGeoV4(adjs, N, geometry, R);
-                break;
-
-            default:
-                assert(false);
-        }
-    }
-    // without geometry
-    else {
-        switch (version) {
-            case 0:
-                // optimized version (= ver. 2)
-                _maxCliqueNoGeoV2(adjs, N);
-                break;
-            case 1:
-                // original version (CNEEO w/ reduction)
-                _maxCliqueNoGeoV1(adjs, N);
-                break;
-            case 2:
-                // optimized CNEEO construction vertion
-                _maxCliqueNoGeoV2(adjs, N);
-                break;
-            default:
-                assert(false);
         }
     }
 }
