@@ -1,34 +1,43 @@
 #pragma once
-#include "reduction.hpp"
-#include "vertexCover.hpp"
 #include <vector>
 
-namespace HRG_CLIQUE{
-    struct Node{
-        double r;
-        double phi;
-    };
+#include "Graph.hpp"
+#include "reduction.hpp"
+#include "vertexCover.hpp"
 
-    struct Edge{
-        int u, v;
-        double d;
-    };
+namespace HRG_CLIQUE {
 
-    double getDist(Node& a, Node& b);
+class MaxClique {
+   public:
+    MaxClique(const std::vector<std::vector<int>>& adjs, const int N,
+              const int version = 0, const std::vector<Node>& geometry = {},
+              const double R = 0.0)
+        : adjs(adjs),
+          N(N),
+          version(version),
+          geometry(geometry),
+          R(R),
+          hasGeo(geometry.size() != 0) {}
+    void run();
+    std::vector<int> getMaxClique() const { return maxClique; }
+    std::vector<pair<int, int>> getFailedEdges() const { return failedEdges; }
 
-    // given a hyperbolic random graph and corresponding geometry, find the maximum clique
-    std::vector<int> getMaxClique(std::vector<std::vector<int>>& adjs, std::vector<Node>& geometry, double R, int N);
+   private:
+    const bool hasGeo;
+    const std::vector<std::vector<int>>& adjs;
+    const int N;
+    const int version;
+    const std::vector<Node>& geometry;
+    const double R;
 
-    // getMaxClique + reduction
-    std::vector<int> getMaxCliqueRed(std::vector<std::vector<int>>& adjs, std::vector<Node>& geometry, double R, int N);
+    std::vector<int> maxClique;
+    std::vector<pair<int, int>> failedEdges;
 
-    // getMaxClique + reduction + skip vertices with low degree
-    std::vector<int> getMaxCliqueSkip(std::vector<std::vector<int>>& adjs, std::vector<Node>& geometry, double R, int N);
-
-    // getMaxClique + reduction + skip vertices with low degree + edge ordering
-    std::vector<int> getMaxCliqueOpt(std::vector<std::vector<int>>& adjs, std::vector<Node>& geometry, double R, int N);
-
-    // given a hyperbolic random graph but no geometry, find the maximum clique (use CNEEO)
-    std::vector<int> getMaxClique(std::vector<std::vector<int>>& adjs, int N);
-
-}
+    void maxCliqueNoGeoV1();
+    void maxCliqueNoGeoV2();
+    void maxCliqueGeoV1();
+    void maxCliqueGeoV2();
+    void maxCliqueGeoV3();
+    void maxCliqueGeoV4();
+};
+}  // namespace HRG_CLIQUE

@@ -1,476 +1,126 @@
 #include "Maximumclique.hpp"
-#include "reduction.hpp"
-#include "CNEEObuilder.hpp"
-#include <vector>
+
 #include <cmath>
+#include <vector>
 
-double HRG_CLIQUE::getDist(Node &a, Node &b)
-{
-    if(a.phi == b.phi) return abs(a.r-b.r);
-    double delta = M_PI - abs(M_PI - abs(a.phi - b.phi));
-    double tmp = M_PI;
-    double d = acosh(cosh(a.r)*cosh(b.r) - sinh(a.r)*sinh(b.r)*cos(delta));
-    if(d != d){
-        // cout << "Fail to calculate distance" << '\n';
-        // cout << a.r << ' ' << a.phi << ' ' << b.r << ' ' << b.phi << '\n';
-        return abs(a.r - b.r);
-    } 
-    return d;
-}
+#include "CNEEObuilder.hpp"
+#include "Graph.hpp"
+#include "MaximalClique.hpp"
+#include "reduction.hpp"
 
-std::vector<int> HRG_CLIQUE::getMaxClique(std::vector<std::vector<int>> &adjs, std::vector<Node> &geometry, double R, int N)
-{
-    std::vector<int> solution;
+void HRG_CLIQUE::MaxClique::run() {
+    // initalize solution
+    maxClique = vector<int>();
+    failedEdges = vector<std::pair<int, int>>();
 
-    // this adjs matrix is reused for the efficiency
-    std::vector<std::vector<int>> cobipartite(N+1);
+    // with geometry
+    if (hasGeo) {
+        switch (version) {
+            case 0:
+                // optimized version (= ver.4)
+                maxCliqueGeoV4();
+                break;
+            case 1:
+                // original version
+                maxCliqueGeoV1();
+                break;
+            case 2:
+                // reduction version
+                maxCliqueGeoV2();
+                break;
+            case 3:
+                // reduction + skip low degree vertices
+                maxCliqueGeoV3();
+                break;
+            case 4:
+                // reduction + skip low degree vertices + skip + edge ordering
+                maxCliqueGeoV4();
+                break;
 
-    // main iteration
-    for(int u=1; u<=N; u++){
-        for(int v: adjs[u]){
-            double d = getDist(geometry[u], geometry[v]);
-            // construct co-bipartite graph
-            std::vector<int> vertices;
-
-            // find common neighbor vertices
-            int tar = (adjs[u].size() < adjs[v].size()) ? u : v; // for speed up, choose the smaller one
-            for(int k: adjs[tar]){
-                if(k == u || k == v) continue;
-                if(adjs[k].size() < solution.size()) continue;
-                if(getDist(geometry[u], geometry[k]) > d || getDist(geometry[v], geometry[k]) > d) continue;
-                vertices.push_back(k);
-            }
-
-            // construct graph
-            for(int a: vertices){
-                for(int b: vertices){
-                    if(a == b) continue;
-                    if(getDist(geometry[a], geometry[b]) > d){
-                        cobipartite[a].push_back(b);
-                    }
-                }
-            }
-
-            // get clique
-            std::vector<int> candidate = getCobipMaxClique(vertices, cobipartite);
-            candidate.push_back(u);
-            candidate.push_back(v);
-
-            // update solution
-            if(candidate.size() > solution.size()){
-                solution = candidate;
-            }
-
-            // clear cobipartite graph
-            for(int a: vertices){
-                cobipartite[a].clear();
-            }
-
+            default:
+                assert(false);
         }
     }
-
-    return solution;
+    // without geometry
+    else {
+        switch (version) {
+            case 0:
+                // optimized version (= ver. 2)
+                maxCliqueNoGeoV2();
+                break;
+            case 1:
+                // original version (CNEEO w/ reduction)
+                maxCliqueNoGeoV1();
+                break;
+            case 2:
+                // optimized CNEEO construction vertion
+                maxCliqueNoGeoV2();
+                break;
+            default:
+                assert(false);
+        }
+    }
 }
 
-std::vector<int> HRG_CLIQUE::getMaxCliqueRed(std::vector<std::vector<int>> &adjs, std::vector<Node> &geometry, double R, int N)
-{
+void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV1() {
     // initalize solution
     std::vector<int> init_solution = getMaximalClique(adjs, N);
-    std::vector<int> solution = init_solution;
+    maxClique = init_solution;
 
     // reduction
-    std::vector<int> red = reduction(adjs, N, solution.size());
+    Reduction red(adjs, N, maxClique.size());
 
-    // reconstruct the graph
-    int newN = red.size();
-    std::vector<int> newId(N+1, 0);
-    std::vector<int> bckId(newN+1, 0);
-    for(int i=0; i<newN; i++){
-        newId[red[i]] = i+1;
-        bckId[i+1] = red[i];
-    }
-
-    std::vector<vector<int>> newAdjs(newN+1);
-    for(int u=1; u<=N; u++){
-        if(!newId[u]) continue;
-        for(int v: adjs[u]){
-            if(!newId[v]) continue;
-            newAdjs[newId[u]].push_back(newId[v]);
-        }
-    }
-
-    // this adjs matrix is reused for the efficiency
-    std::vector<std::vector<int>> cobipartite(newN+1);
-
-    // main iteration
-    for(int u=1; u<=newN; u++){
-        for(int v: newAdjs[u]){
-            double d = getDist(geometry[bckId[u]], geometry[bckId[v]]);
-            if(d > R) continue;
-            // construct co-bipartite graph
-            std::vector<int> vertices;
-
-            // find common neighbor vertices
-            int tar = (newAdjs[u].size() < newAdjs[v].size()) ? u : v; // for speed up, choose the smaller one
-            for(int k: newAdjs[tar]){
-                if(k == u || k == v) continue;
-                if(getDist(geometry[bckId[u]], geometry[bckId[k]]) > d || getDist(geometry[bckId[v]], geometry[bckId[k]]) > d) continue;
-                vertices.push_back(k);
-            }
-
-            // construct graph
-            for(int a: vertices){
-                for(int b: vertices){
-                    if(a == b) continue;
-                    if(getDist(geometry[bckId[a]], geometry[bckId[b]]) > d){
-                        cobipartite[a].push_back(b);
-                    }
-                }
-            }
-
-            // get clique
-            std::vector<int> candidate = getCobipMaxClique(vertices, cobipartite);
-            candidate.push_back(u);
-            candidate.push_back(v);
-
-            // update solution
-            if(candidate.size() > solution.size()){
-                solution = candidate;
-            }
-
-            // clear cobipartite graph
-            for(int a: vertices){
-                cobipartite[a].clear();
-            }
-
-        }
-    }
-    
-    // restore the vertex number
-    if(solution.size() > init_solution.size()){
-        for(int &v: solution){
-            v = red[v-1];
-        }
-    }
-
-    return solution;
-}
-
-std::vector<int> HRG_CLIQUE::getMaxCliqueSkip(std::vector<std::vector<int>> &adjs, std::vector<Node> &geometry, double R, int N)
-{
-
-    // initalize solution
-    std::vector<int> init_solution = getMaximalClique(adjs, N);
-    std::vector<int> solution = init_solution;
-
-    // reduction
-    std::vector<int> red = reduction(adjs, N, solution.size());
-
-    // reconstruct the graph
-    int newN = red.size();
-    std::vector<int> newId(N+1, 0);
-    std::vector<int> bckId(newN+1, 0);
-    for(int i=0; i<newN; i++){
-        newId[red[i]] = i+1;
-        bckId[i+1] = red[i];
-    }
-
-    std::vector<vector<int>> newAdjs(newN+1);
-    for(int u=1; u<=N; u++){
-        if(!newId[u]) continue;
-        for(int v: adjs[u]){
-            if(!newId[v]) continue;
-            newAdjs[newId[u]].push_back(newId[v]);
-        }
-    }
-
-    // this adjs matrix is reused for the efficiency
-    std::vector<std::vector<int>> cobipartite(newN+1);
-
-    // main iteration
-    for(int u=1; u<=newN; u++){
-        if(newAdjs[u].size() < solution.size()) continue;
-        for(int v: newAdjs[u]){
-            if(newAdjs[v].size() < solution.size()) continue;
-            double d = getDist(geometry[bckId[u]], geometry[bckId[v]]);
-            if(d > R) continue;
-            // construct co-bipartite graph
-            std::vector<int> vertices;
-
-            // find common neighbor vertices
-            int tar = (newAdjs[u].size() < newAdjs[v].size()) ? u : v; // for speed up, choose the smaller one
-            for(int k: newAdjs[tar]){
-                if(k == u || k == v) continue;
-                if(newAdjs[k].size() < solution.size()) continue;
-                if(getDist(geometry[bckId[u]], geometry[bckId[k]]) > d || getDist(geometry[bckId[v]], geometry[bckId[k]]) > d) continue;
-                vertices.push_back(k);
-            }
-
-            // |vertices|+2 <= |solution|: can not be a larger clique, skip
-            if(vertices.size() + 2 <= solution.size()){
-                continue;
-            }
-
-            // construct graph
-            for(int a: vertices){
-                for(int b: vertices){
-                    if(a == b) continue;
-                    if(getDist(geometry[bckId[a]], geometry[bckId[b]]) > d){
-                        cobipartite[a].push_back(b);
-                    }
-                }
-            }
-
-            // get clique
-            std::vector<int> candidate = getCobipMaxClique(vertices, cobipartite);
-            candidate.push_back(u);
-            candidate.push_back(v);
-
-            // update solution
-            if(candidate.size() > solution.size()){
-                solution = candidate;
-            }
-
-            // clear cobipartite graph
-            for(int a: vertices){
-                cobipartite[a].clear();
-            }
-
-        }
-    }
-    
-    // restore the vertex number
-    if(solution.size() > init_solution.size()){
-        for(int &v: solution){
-            v = red[v-1];
-        }
-    }
-
-    return solution;
-
-}
-
-std::vector<int> HRG_CLIQUE::getMaxCliqueOpt(std::vector<std::vector<int>> &adjs, std::vector<Node> &geometry, double R, int N)
-{
-    // initalize solution
-    std::vector<int> init_solution = getMaximalClique(adjs, N);
-    std::vector<int> solution = init_solution;
-
-    // reduction
-    std::vector<int> red = reduction(adjs, N, solution.size());
-
-    // reconstruct the graph
-    int newN = red.size();
-    std::vector<int> newId(N+1, 0);
-    std::vector<int> bckId(newN+1, 0);
-    for(int i=0; i<newN; i++){
-        newId[red[i]] = i+1;
-        bckId[i+1] = red[i];
-    }
-
-    std::vector<Edge> edges;
-    for(int u=1; u<=N; u++){
-        if(!newId[u]) continue;
-        for(int v: adjs[u]){
-            if(!newId[v]) continue;
-            if(newId[u] > newId[v]) continue; // avoid duplicate (u, v)
-            double d = getDist(geometry[u], geometry[v]);
-            edges.push_back({newId[u], newId[v], d});
-        }
-    }
-
-    // sort edges by distance in non-increasing order
-    std::sort(edges.begin(), edges.end(), [](const Edge &a, const Edge &b){
-        return a.d > b.d;
-    });
-
-    std::vector<vector<int>> newAdjs(newN+1);
-    // this adjs matrix is reuse for the efficiency
-    std::vector<std::vector<int>> cobipartite(newN+1);
-    std::vector<int> commonCache(newN+1, 0);
-    std::vector<int> neighborCache(newN+1, 0);
-
-    // std::set<std::pair<int, int>> edgeSet;
-
-    // main iteration
-    for(int i=edges.size()-1; i>=0; i--){
-        int u = edges[i].u;
-        int v = edges[i].v;
-        newAdjs[u].push_back(v);
-        newAdjs[v].push_back(u);
-        if(newAdjs[u].size() < solution.size()) continue;
-        if(newAdjs[v].size() < solution.size()) continue;
-
-        // collect all common neighbor vertices
-        std::vector<int> vertices;
-        for(int k: newAdjs[u]){
-            if(k == v) continue;
-            if(newAdjs[k].size() < solution.size()) continue;
-            commonCache[k]++;
-        }
-        for(int k: newAdjs[v]){
-            if(k == u) continue;
-            if(newAdjs[k].size() < solution.size()) continue;
-            commonCache[k]++;
-            if(commonCache[k] == 2){
-                vertices.push_back(k);
-            }
-        }
-
-        // |vertices|+2 <= |solution|: can not be a larger clique, skip
-        if(vertices.size() + 2 <= solution.size()){
-            // clear commonCache
-            for(int k: newAdjs[u]){
-                if(k == v) continue;
-                commonCache[k] = 0;
-            }
-            for(int k: newAdjs[v]){
-                if(k == u) continue;
-                commonCache[k] = 0;
-            }
-            continue;
-        }
-
-        // need constructing complement graph of induced subgraph
-        // time complexity: O(|V|^2)
-        for(int a: vertices){
-            // check neighbors in a graph
-            for(int nei: newAdjs[a]){
-                if(nei == u || nei == v) continue;
-                if(commonCache[nei] == 2){
-                    neighborCache[nei]++;
-                }
-            }
-
-            // find complement edges
-            for(int b: vertices){
-                if(a == b) continue;
-                if(!neighborCache[b]){
-                    cobipartite[a].push_back(b);
-                }
-            }
-
-            // clear neighborCache
-            for(int nei: newAdjs[a]){
-                if(commonCache[nei] == 2){
-                    neighborCache[nei] = 0;
-                }
-            }
-        }
-
-        // clear commonCache
-        for(int k: newAdjs[u]){
-            commonCache[k] = 0;
-        }
-        for(int k: newAdjs[v]){
-            commonCache[k] = 0;
-        }
-
-        // get candidate clique
-        std::vector<int> candidate = getCobipMaxClique(vertices, cobipartite);
-        candidate.push_back(u);
-        candidate.push_back(v);
-
-        // update solution
-        if(candidate.size() > solution.size()){
-            solution = candidate;
-        }
-
-        // clear cobipartite graph
-        for(int a: vertices){
-            cobipartite[a].clear();
-        }
-    }
-
-    // restore the vertex number
-    if(solution.size() > init_solution.size()){
-        for(int &v: solution){
-            v = red[v-1];
-        }
-    }
-
-    return solution;
-}
-
-std::vector<int> HRG_CLIQUE::getMaxClique(std::vector<std::vector<int>> &adjs, int N)
-{
-    // initalize solution
-    std::vector<int> init_solution = getMaximalClique(adjs, N);
-    std::vector<int> solution = init_solution;
-
-    // reduction
-    std::vector<int> red = reduction(adjs, N, solution.size());
-    std::cout << "initial size " << N << '\n';
-    std::cout << "reduction: " << red.size() << '\n';
-
-    // reconstruct the graph
-    int newN = red.size();
-    std::vector<int> newId(N+1, 0);
-    std::vector<int> bckId(newN+1, 0);
-    for(int i=0; i<newN; i++){
-        newId[red[i]] = i+1;
-        bckId[i+1] = red[i];
-    }
-
-    std::vector<vector<int>> newAdjs(newN+1);
-    for(int u=1; u<=N; u++){
-        if(!newId[u]) continue;
-        for(int v: adjs[u]){
-            if(!newId[v]) continue;
-            newAdjs[newId[u]].push_back(newId[v]);
-        }
-    }
+    std::vector<std::vector<int>> adjs_red = red.getAdjs_red();
+    std::vector<int> bwdId = red.getBwdId();
+    int redSize = red.getRedSize();
 
     // construct CNEEO
-    std::vector<pair<int, int>> CNEEO = getCNEEO(newAdjs, newN);
+    CNEEObuilder CNEEObuild(adjs_red, redSize, 1);
+    std::vector<std::pair<int, int>> CNEEO = CNEEObuild.getCNEEO();
 
     // reconstruct the graph
     // add the edges in reverse order of CNEEO
-    for(int i=1; i<=newN; i++){
-        newAdjs[i].clear();
-    }
+    std::vector<vector<int>> newAdjs(redSize + 1);
 
     // this adjs matrix is reuse for the efficiency
-    std::vector<std::vector<int>> cobipartite(newN+1);
-    std::vector<int> commonCache(newN+1, 0);
-    std::vector<int> neighborCache(newN+1, 0);
-
-    // std::set<std::pair<int, int>> edgeSet;
+    std::vector<std::vector<int>> cobipartite(redSize + 1);
+    std::vector<int> commonCache(redSize + 1, 0);
+    std::vector<int> neighborCache(redSize + 1, 0);
 
     // main iteration
-    for(int i=CNEEO.size()-1; i>=0; i--){
+    for (int i = CNEEO.size() - 1; i >= 0; i--) {
         int u = CNEEO[i].first;
         int v = CNEEO[i].second;
         newAdjs[u].push_back(v);
         newAdjs[v].push_back(u);
-        if(newAdjs[u].size() < solution.size()) continue;
-        if(newAdjs[v].size() < solution.size()) continue;
+        if (newAdjs[u].size() < maxClique.size()) continue;
+        if (newAdjs[v].size() < maxClique.size()) continue;
 
         // collect all common neighbor vertices
         std::vector<int> vertices;
-        for(int k: newAdjs[u]){
-            if(k == v) continue;
-            if(newAdjs[k].size() < solution.size()) continue;
+        for (int k : newAdjs[u]) {
+            if (k == v) continue;
+            if (newAdjs[k].size() < maxClique.size()) continue;
             commonCache[k]++;
         }
-        for(int k: newAdjs[v]){
-            if(k == u) continue;
-            if(newAdjs[k].size() < solution.size()) continue;
+        for (int k : newAdjs[v]) {
+            if (k == u) continue;
+            if (newAdjs[k].size() < maxClique.size()) continue;
             commonCache[k]++;
-            if(commonCache[k] == 2){
+            if (commonCache[k] == 2) {
                 vertices.push_back(k);
             }
         }
 
         // |vertices|+2 <= |solution|: can not be a clique, skip
-        if(vertices.size() + 2 <= solution.size()){
+        if (vertices.size() + 2 <= maxClique.size()) {
             // clear commonCache
-            for(int k: newAdjs[u]){
-                if(k == v) continue;
+            for (int k : newAdjs[u]) {
+                if (k == v) continue;
                 commonCache[k] = 0;
             }
-            for(int k: newAdjs[v]){
-                if(k == u) continue;
+            for (int k : newAdjs[v]) {
+                if (k == u) continue;
                 commonCache[k] = 0;
             }
             continue;
@@ -478,36 +128,36 @@ std::vector<int> HRG_CLIQUE::getMaxClique(std::vector<std::vector<int>> &adjs, i
 
         // need constructing complement graph of induced subgraph
         // time complexity: O(|V|^2)
-        for(int a: vertices){
+        for (int a : vertices) {
             // check neighbors in a graph
-            for(int nei: newAdjs[a]){
-                if(nei == u || nei == v) continue;
-                if(commonCache[nei] == 2){
+            for (int nei : newAdjs[a]) {
+                if (nei == u || nei == v) continue;
+                if (commonCache[nei] == 2) {
                     neighborCache[nei]++;
                 }
             }
 
             // find complement edges
-            for(int b: vertices){
-                if(a == b) continue;
-                if(!neighborCache[b]){
+            for (int b : vertices) {
+                if (a == b) continue;
+                if (!neighborCache[b]) {
                     cobipartite[a].push_back(b);
                 }
             }
 
             // clear neighborCache
-            for(int nei: newAdjs[a]){
-                if(commonCache[nei] == 2){
+            for (int nei : newAdjs[a]) {
+                if (commonCache[nei] == 2) {
                     neighborCache[nei] = 0;
                 }
             }
         }
 
         // clear commonCache
-        for(int k: newAdjs[u]){
+        for (int k : newAdjs[u]) {
             commonCache[k] = 0;
         }
-        for(int k: newAdjs[v]){
+        for (int k : newAdjs[v]) {
             commonCache[k] = 0;
         }
 
@@ -517,23 +167,484 @@ std::vector<int> HRG_CLIQUE::getMaxClique(std::vector<std::vector<int>> &adjs, i
         candidate.push_back(v);
 
         // update solution
-        if(candidate.size() > solution.size()){
-            solution = candidate;
+        if (candidate.size() > maxClique.size()) {
+            maxClique = candidate;
         }
 
         // clear cobipartite graph
-        for(int a: vertices){
+        for (int a : vertices) {
             cobipartite[a].clear();
         }
     }
 
     // restore the vertex number
-    if(solution.size() > init_solution.size()){
-        for(int &v: solution){
-            v = red[v-1];
+    if (maxClique.size() > init_solution.size()) {
+        for (int& v : maxClique) {
+            v = bwdId[v];
         }
     }
 
-    return solution;
+    // get failed edges & restore the vertex number
+    failedEdges = CNEEObuild.getFails();
+    for (auto& e : failedEdges) {
+        e.first = bwdId[e.first];
+        e.second = bwdId[e.second];
+    }
+}
 
+void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV2() {
+    // initalize solution
+    std::vector<int> init_solution = getMaximalClique(adjs, N);
+    maxClique = init_solution;
+
+    // reduction
+    Reduction red(adjs, N, maxClique.size());
+
+    std::vector<std::vector<int>> adjs_red = red.getAdjs_red();
+    std::vector<int> bwdId = red.getBwdId();
+    int redSize = red.getRedSize();
+
+    // construct CNEEO
+    CNEEObuilder CNEEObuild(adjs_red, redSize);
+    std::vector<std::pair<int, int>> CNEEO = CNEEObuild.getCNEEO();
+
+    // reconstruct the graph
+    // add the edges in reverse order of CNEEO
+    std::vector<vector<int>> newAdjs(redSize + 1);
+
+    // this adjs matrix is reuse for the efficiency
+    std::vector<std::vector<int>> cobipartite(redSize + 1);
+    std::vector<int> commonCache(redSize + 1, 0);
+    std::vector<int> neighborCache(redSize + 1, 0);
+
+    // main iteration
+    for (int i = CNEEO.size() - 1; i >= 0; i--) {
+        int u = CNEEO[i].first;
+        int v = CNEEO[i].second;
+        newAdjs[u].push_back(v);
+        newAdjs[v].push_back(u);
+        if (newAdjs[u].size() < maxClique.size()) continue;
+        if (newAdjs[v].size() < maxClique.size()) continue;
+
+        // collect all common neighbor vertices
+        std::vector<int> vertices;
+        for (int k : newAdjs[u]) {
+            if (k == v) continue;
+            if (newAdjs[k].size() < maxClique.size()) continue;
+            commonCache[k]++;
+        }
+        for (int k : newAdjs[v]) {
+            if (k == u) continue;
+            if (newAdjs[k].size() < maxClique.size()) continue;
+            commonCache[k]++;
+            if (commonCache[k] == 2) {
+                vertices.push_back(k);
+            }
+        }
+
+        // |vertices|+2 <= |solution|: can not be a clique, skip
+        if (vertices.size() + 2 <= maxClique.size()) {
+            // clear commonCache
+            for (int k : newAdjs[u]) {
+                if (k == v) continue;
+                commonCache[k] = 0;
+            }
+            for (int k : newAdjs[v]) {
+                if (k == u) continue;
+                commonCache[k] = 0;
+            }
+            continue;
+        }
+
+        // need constructing complement graph of induced subgraph
+        // time complexity: O(|V|^2)
+        for (int a : vertices) {
+            // check neighbors in a graph
+            for (int nei : newAdjs[a]) {
+                if (nei == u || nei == v) continue;
+                if (commonCache[nei] == 2) {
+                    neighborCache[nei]++;
+                }
+            }
+
+            // find complement edges
+            for (int b : vertices) {
+                if (a == b) continue;
+                if (!neighborCache[b]) {
+                    cobipartite[a].push_back(b);
+                }
+            }
+
+            // clear neighborCache
+            for (int nei : newAdjs[a]) {
+                if (commonCache[nei] == 2) {
+                    neighborCache[nei] = 0;
+                }
+            }
+        }
+
+        // clear commonCache
+        for (int k : newAdjs[u]) {
+            commonCache[k] = 0;
+        }
+        for (int k : newAdjs[v]) {
+            commonCache[k] = 0;
+        }
+
+        // get candidate clique
+        std::vector<int> candidate = getCobipMaxClique(vertices, cobipartite);
+        candidate.push_back(u);
+        candidate.push_back(v);
+
+        // update solution
+        if (candidate.size() > maxClique.size()) {
+            maxClique = candidate;
+        }
+
+        // clear cobipartite graph
+        for (int a : vertices) {
+            cobipartite[a].clear();
+        }
+    }
+
+    // restore the vertex number
+    if (maxClique.size() > init_solution.size()) {
+        for (int& v : maxClique) {
+            v = bwdId[v];
+        }
+    }
+
+    // get failed edges & restore the vertex number
+    failedEdges = CNEEObuild.getFails();
+    for (auto& e : failedEdges) {
+        e.first = bwdId[e.first];
+        e.second = bwdId[e.second];
+    }
+}
+
+void HRG_CLIQUE::MaxClique::maxCliqueGeoV1() {
+    // this adjs matrix is reused for the efficiency
+    std::vector<std::vector<int>> cobipartite(N + 1);
+
+    // main iteration
+    for (int u = 1; u <= N; u++) {
+        for (int v : adjs[u]) {
+            double d = getDist(geometry[u], geometry[v]);
+            // construct co-bipartite graph
+            std::vector<int> vertices;
+
+            // find common neighbor vertices
+            // for speed up, choose the smaller one
+            int tar = (adjs[u].size() < adjs[v].size()) ? u : v;
+            for (int k : adjs[tar]) {
+                if (k == u || k == v) continue;
+                if (adjs[k].size() < maxClique.size()) continue;
+                if (getDist(geometry[u], geometry[k]) > d ||
+                    getDist(geometry[v], geometry[k]) > d)
+                    continue;
+                vertices.push_back(k);
+            }
+
+            // construct graph
+            for (int a : vertices) {
+                for (int b : vertices) {
+                    if (a == b) continue;
+                    if (getDist(geometry[a], geometry[b]) > d) {
+                        cobipartite[a].push_back(b);
+                    }
+                }
+            }
+
+            // get clique
+            std::vector<int> candidate =
+                getCobipMaxClique(vertices, cobipartite);
+            candidate.push_back(u);
+            candidate.push_back(v);
+
+            // update solution
+            if (candidate.size() > maxClique.size()) {
+                maxClique = candidate;
+            }
+
+            // clear cobipartite graph
+            for (int a : vertices) {
+                cobipartite[a].clear();
+            }
+        }
+    }
+}
+
+void HRG_CLIQUE::MaxClique::maxCliqueGeoV2() {
+    // initalize solution
+    std::vector<int> init_solution = getMaximalClique(adjs, N);
+    maxClique = init_solution;
+
+    // reduction
+    Reduction red(adjs, geometry, R, N, maxClique.size());
+
+    std::vector<std::vector<int>> adjs_red = red.getAdjs_red();
+    std::vector<int> bwdId = red.getBwdId();
+    int redSize = red.getRedSize();
+    std::vector<Node> geo_red = red.getGeo_red();
+
+    // this adjs matrix is reused for the efficiency
+    std::vector<std::vector<int>> cobipartite(redSize + 1);
+
+    // main iteration
+    for (int u = 1; u <= redSize; u++) {
+        for (int v : adjs_red[u]) {
+            double d = getDist(geo_red[u], geo_red[v]);
+            if (d > R) continue;
+            // construct co-bipartite graph
+            std::vector<int> vertices;
+
+            // find common neighbor vertices
+            // for speed up, choose the smaller one
+            int tar = (adjs_red[u].size() < adjs_red[v].size()) ? u : v;
+            for (int k : adjs_red[tar]) {
+                if (k == u || k == v) continue;
+                if (getDist(geo_red[u], geo_red[k]) > d ||
+                    getDist(geo_red[v], geo_red[k]) > d)
+                    continue;
+                vertices.push_back(k);
+            }
+
+            // construct graph
+            for (int a : vertices) {
+                for (int b : vertices) {
+                    if (a == b) continue;
+                    if (getDist(geo_red[a], geo_red[b]) > d) {
+                        cobipartite[a].push_back(b);
+                    }
+                }
+            }
+
+            // get clique
+            std::vector<int> candidate =
+                getCobipMaxClique(vertices, cobipartite);
+            candidate.push_back(u);
+            candidate.push_back(v);
+
+            // update solution
+            if (candidate.size() > maxClique.size()) {
+                maxClique = candidate;
+            }
+
+            // clear cobipartite graph
+            for (int a : vertices) {
+                cobipartite[a].clear();
+            }
+        }
+    }
+
+    // restore the vertex number
+    if (maxClique.size() > init_solution.size()) {
+        for (int& v : maxClique) {
+            v = bwdId[v];
+        }
+    }
+}
+
+void HRG_CLIQUE::MaxClique::maxCliqueGeoV3() {
+    // initalize solution
+    std::vector<int> init_solution = getMaximalClique(adjs, N);
+    maxClique = init_solution;
+
+    // reduction
+    Reduction red(adjs, geometry, R, N, maxClique.size());
+
+    std::vector<std::vector<int>> adjs_red = red.getAdjs_red();
+    std::vector<int> bwdId = red.getBwdId();
+    int redSize = red.getRedSize();
+    std::vector<Node> geo_red = red.getGeo_red();
+
+    // this adjs matrix is reused for the efficiency
+    std::vector<std::vector<int>> cobipartite(redSize + 1);
+
+    // main iteration
+    for (int u = 1; u <= redSize; u++) {
+        if (adjs_red[u].size() < maxClique.size()) continue;
+        for (int v : adjs_red[u]) {
+            if (adjs_red[v].size() < maxClique.size()) continue;
+            double d = getDist(geo_red[u], geo_red[v]);
+            if (d > R) continue;
+            // construct co-bipartite graph
+            std::vector<int> vertices;
+
+            // find common neighbor vertices
+            // for speed up, choose the smaller one
+            int tar = (adjs_red[u].size() < adjs_red[v].size()) ? u : v;
+            for (int k : adjs_red[tar]) {
+                if (k == u || k == v) continue;
+                if (adjs_red[k].size() < maxClique.size()) continue;
+                if (getDist(geo_red[u], geo_red[k]) > d ||
+                    getDist(geo_red[v], geo_red[k]) > d)
+                    continue;
+                vertices.push_back(k);
+            }
+
+            // construct graph
+            for (int a : vertices) {
+                for (int b : vertices) {
+                    if (a == b) continue;
+                    if (getDist(geo_red[a], geo_red[b]) > d) {
+                        cobipartite[a].push_back(b);
+                    }
+                }
+            }
+
+            // get clique
+            std::vector<int> candidate =
+                getCobipMaxClique(vertices, cobipartite);
+            candidate.push_back(u);
+            candidate.push_back(v);
+
+            // update solution
+            if (candidate.size() > maxClique.size()) {
+                maxClique = candidate;
+            }
+
+            // clear cobipartite graph
+            for (int a : vertices) {
+                cobipartite[a].clear();
+            }
+        }
+    }
+
+    // restore the vertex number
+    if (maxClique.size() > init_solution.size()) {
+        for (int& v : maxClique) {
+            v = bwdId[v];
+        }
+    }
+}
+
+void HRG_CLIQUE::MaxClique::maxCliqueGeoV4() {
+    // initalize solution
+    std::vector<int> init_solution = getMaximalClique(adjs, N);
+    maxClique = init_solution;
+
+    // reduction
+    Reduction red(adjs, geometry, R, N, maxClique.size());
+
+    std::vector<std::vector<int>> adjs_red = red.getAdjs_red();
+    std::vector<int> bwdId = red.getBwdId();
+    int redSize = red.getRedSize();
+    std::vector<Node> geo_red = red.getGeo_red();
+
+    // collect edges
+    std::vector<Edge> edges;
+    for (int u = 1; u <= redSize; u++) {
+        for (int v : adjs_red[u]) {
+            if (u > v) continue;  // avoid duplicate (u, v)
+            double d = getDist(geo_red[u], geo_red[v]);
+            edges.push_back({u, v, d});
+        }
+    }
+
+    // sort edges by distance in non-increasing order
+    std::sort(edges.begin(), edges.end(),
+              [](const Edge& a, const Edge& b) { return a.d > b.d; });
+
+    std::vector<vector<int>> newAdjs(redSize + 1);
+    std::vector<vector<int>> cobipartite(redSize + 1);
+    std::vector<int> commonCache(redSize + 1, 0);
+    std::vector<int> neighborCache(redSize + 1, 0);
+
+    // main iteration
+    for (int i = edges.size() - 1; i >= 0; i--) {
+        int u = edges[i].u;
+        int v = edges[i].v;
+        newAdjs[u].push_back(v);
+        newAdjs[v].push_back(u);
+        if (newAdjs[u].size() < maxClique.size()) continue;
+        if (newAdjs[v].size() < maxClique.size()) continue;
+
+        // collect all common neighbor vertices
+        std::vector<int> vertices;
+        for (int k : newAdjs[u]) {
+            if (k == v) continue;
+            if (newAdjs[k].size() < maxClique.size()) continue;
+            commonCache[k]++;
+        }
+        for (int k : newAdjs[v]) {
+            if (k == u) continue;
+            if (newAdjs[k].size() < maxClique.size()) continue;
+            commonCache[k]++;
+            if (commonCache[k] == 2) {
+                vertices.push_back(k);
+            }
+        }
+
+        // |vertices|+2 <= |solution|: can not be a larger clique, skip
+        if (vertices.size() + 2 <= maxClique.size()) {
+            // clear commonCache
+            for (int k : newAdjs[u]) {
+                if (k == v) continue;
+                commonCache[k] = 0;
+            }
+            for (int k : newAdjs[v]) {
+                if (k == u) continue;
+                commonCache[k] = 0;
+            }
+            continue;
+        }
+
+        // need constructing complement graph of induced subgraph
+        // time complexity: O(|V|^2)
+        for (int a : vertices) {
+            // check neighbors in a graph
+            for (int nei : newAdjs[a]) {
+                if (nei == u || nei == v) continue;
+                if (commonCache[nei] == 2) {
+                    neighborCache[nei]++;
+                }
+            }
+
+            // find complement edges
+            for (int b : vertices) {
+                if (a == b) continue;
+                if (!neighborCache[b]) {
+                    cobipartite[a].push_back(b);
+                }
+            }
+
+            // clear neighborCache
+            for (int nei : newAdjs[a]) {
+                if (commonCache[nei] == 2) {
+                    neighborCache[nei] = 0;
+                }
+            }
+        }
+
+        // clear commonCache
+        for (int k : newAdjs[u]) {
+            commonCache[k] = 0;
+        }
+        for (int k : newAdjs[v]) {
+            commonCache[k] = 0;
+        }
+
+        // get candidate clique
+        std::vector<int> candidate = getCobipMaxClique(vertices, cobipartite);
+        candidate.push_back(u);
+        candidate.push_back(v);
+
+        // update solution
+        if (candidate.size() > maxClique.size()) {
+            maxClique = candidate;
+        }
+
+        // clear cobipartite graph
+        for (int a : vertices) {
+            cobipartite[a].clear();
+        }
+    }
+
+    // restore the vertex number
+    if (maxClique.size() > init_solution.size()) {
+        for (int& v : maxClique) {
+            v = bwdId[v];
+        }
+    }
 }
