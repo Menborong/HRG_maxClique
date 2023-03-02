@@ -1,4 +1,4 @@
-#include "Maximumclique.hpp"
+#include "MaximumClique.hpp"
 
 #include <cmath>
 #include <vector>
