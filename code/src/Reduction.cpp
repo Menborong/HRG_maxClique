@@ -1,4 +1,4 @@
-#include "reduction.hpp"
+#include "Reduction.hpp"
 
 #include <queue>
 #include <vector>

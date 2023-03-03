@@ -22,3 +22,5 @@ set(HEADERS
 )
 
 add_library(HRG_Clique ${SOURCES} ${HEADERS})
+
+add_subdirectory(test)

@@ -1,4 +1,4 @@
-#include "vertexCover.hpp"
+#include "VertexCover.hpp"
 
 #include <vector>
 

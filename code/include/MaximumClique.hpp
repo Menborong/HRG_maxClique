@@ -2,8 +2,8 @@
 #include <vector>
 
 #include "Graph.hpp"
-#include "reduction.hpp"
-#include "vertexCover.hpp"
+#include "Reduction.hpp"
+#include "VertexCover.hpp"
 
 namespace HRG_CLIQUE {
 
