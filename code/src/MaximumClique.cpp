@@ -6,7 +6,7 @@
 #include "CNEEObuilder.hpp"
 #include "Graph.hpp"
 #include "MaximalClique.hpp"
-#include "reduction.hpp"
+#include "Reduction.hpp"
 
 void HRG_CLIQUE::MaxClique::run() {
     // initalize solution
@@ -380,7 +380,7 @@ void HRG_CLIQUE::MaxClique::maxCliqueGeoV2() {
     maxClique = init_solution;
 
     // reduction
-    Reduction red(adjs, geometry, R, N, maxClique.size());
+    Reduction red(adjs, geometry, N, maxClique.size());
 
     std::vector<std::vector<int>> adjs_red = red.getAdjs_red();
     std::vector<int> bwdId = red.getBwdId();
@@ -451,7 +451,7 @@ void HRG_CLIQUE::MaxClique::maxCliqueGeoV3() {
     maxClique = init_solution;
 
     // reduction
-    Reduction red(adjs, geometry, R, N, maxClique.size());
+    Reduction red(adjs, geometry, N, maxClique.size());
 
     std::vector<std::vector<int>> adjs_red = red.getAdjs_red();
     std::vector<int> bwdId = red.getBwdId();
@@ -525,7 +525,7 @@ void HRG_CLIQUE::MaxClique::maxCliqueGeoV4() {
     maxClique = init_solution;
 
     // reduction
-    Reduction red(adjs, geometry, R, N, maxClique.size());
+    Reduction red(adjs, geometry, N, maxClique.size());
 
     std::vector<std::vector<int>> adjs_red = red.getAdjs_red();
     std::vector<int> bwdId = red.getBwdId();

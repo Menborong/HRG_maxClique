@@ -51,10 +51,11 @@ struct MinVertexCover {
     }
 
     bool dfs(int x) {
-        for (int& i = list[x]; i < adjs[x].size(); i++) {
+        int adjSize = adjs[x].size();
+        for (int& i = list[x]; i < adjSize; i++) {
             int y = adjs[x][i];
             int z = YtoX[y];
-            if (!z || level[z] == level[x] + 1 && dfs(z)) {
+            if (!z || (level[z] == level[x] + 1 && dfs(z))) {
                 XtoY[x] = y;
                 YtoX[y] = x;
                 return true;

@@ -4,6 +4,7 @@
 #include "Graph.hpp"
 
 int main(int argc, char *argv[]) {
+    (void)argc;
     std::ifstream ifs;
     // read graph
     std::string FILENAME1 = argv[1];
@@ -21,8 +22,6 @@ int main(int argc, char *argv[]) {
     ifs.close();
 
     std::string OUTFILE = argv[2];
-    int version = 0;
-    if (argc > 3) version = atoi(argv[3]);
 
     // get initial solution (maximal)
     std::vector<int> clique = HRG_CLIQUE::getMaximalClique(adjs, n);

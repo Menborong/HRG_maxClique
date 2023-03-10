@@ -12,7 +12,8 @@ std::vector<int> HRG_CLIQUE::getMaximalClique(
     }
     std::vector<int> sorted;
     for (int i = N; i >= 0; i--) {
-        for (int j = 0; j < degrees[i].size(); j++) {
+        int degSize = degrees[i].size();
+        for (int j = 0; j < degSize; j++) {
             sorted.push_back(degrees[i][j]);
         }
     }
@@ -23,9 +24,11 @@ std::vector<int> HRG_CLIQUE::getMaximalClique(
 
     for (int i = 0; i < N; i++) {
         int v = sorted[i];
-        if (numCliqueNeighbor[v] == clique.size()) {
+        int cliqueSize = clique.size();
+        if (numCliqueNeighbor[v] == cliqueSize) {
             clique.push_back(v);
-            for (int j = 0; j < adjs[v].size(); j++) {
+            int adjSize = adjs[v].size();
+            for (int j = 0; j < adjSize; j++) {
                 numCliqueNeighbor[adjs[v][j]]++;
             }
         }

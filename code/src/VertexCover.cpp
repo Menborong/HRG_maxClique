@@ -14,7 +14,7 @@ std::vector<int> HRG_CLIQUE::getCobipMaxClique(
 
     // coloring for finding bipartite graph
     for (int v : V) {
-        if (minVCCache1.size() <= v) minVCCache1.resize(v + 1, 0);
+        if ((int)minVCCache1.size() <= v) minVCCache1.resize(v + 1, 0);
         if (minVCCache1[v]) continue;
         queue<int> q;
         q.push(v);
@@ -24,7 +24,7 @@ std::vector<int> HRG_CLIQUE::getCobipMaxClique(
             int u = q.front();
             q.pop();
             for (int v : adjs[u]) {
-                if (minVCCache1.size() <= v) minVCCache1.resize(v + 1, 0);
+                if ((int)minVCCache1.size() <= v) minVCCache1.resize(v + 1, 0);
                 assert(minVCCache1[v] != minVCCache1[u]);
                 if (minVCCache1[v]) continue;
                 minVCCache1[v] = minVCCache1[u] ^ 3;
@@ -36,7 +36,7 @@ std::vector<int> HRG_CLIQUE::getCobipMaxClique(
     // relabeling
     int xNow = 0, yNow = 0;
     for (int v : V) {
-        if (minVCCache2.size() <= v) minVCCache2.resize(v + 1, 0);
+        if ((int)minVCCache2.size() <= v) minVCCache2.resize(v + 1, 0);
         if (minVCCache1[v] == 1)
             minVCCache2[v] = ++xNow;
         else if (minVCCache1[v] == 2)

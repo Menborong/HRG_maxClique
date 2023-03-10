@@ -25,7 +25,7 @@ class Reduction {
     /// @param N the number of vertices
     /// @param initSize the initial size of the clique
     Reduction(const std::vector<std::vector<int>>& adjs,
-              const std::vector<Node>& geometry, const double R, const int N,
+              const std::vector<Node>& geometry, const int N,
               const int initSize);
 
     std::vector<std::vector<int>>& getAdjs_red() { return adjs_red; }

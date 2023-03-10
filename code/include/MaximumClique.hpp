@@ -2,7 +2,6 @@
 #include <vector>
 
 #include "Graph.hpp"
-#include "Reduction.hpp"
 #include "VertexCover.hpp"
 
 namespace HRG_CLIQUE {
@@ -23,12 +22,12 @@ class MaxClique {
     std::vector<pair<int, int>> getFailedEdges() const { return failedEdges; }
 
    private:
-    const bool hasGeo;
     const std::vector<std::vector<int>>& adjs;
     const int N;
     const int version;
     const std::vector<Node>& geometry;
     const double R;
+    const bool hasGeo;
 
     std::vector<int> maxClique;
     std::vector<pair<int, int>> failedEdges;

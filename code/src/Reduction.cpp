@@ -59,7 +59,7 @@ Reduction::Reduction(const std::vector<std::vector<int>>& adjs, const int N,
 }
 
 Reduction::Reduction(const std::vector<std::vector<int>>& adjs,
-                     const std::vector<Node>& geometry, const double R,
+                     const std::vector<Node>& geometry,
                      const int N, const int initSize) {
     Reduction(adjs, N, initSize);
     geo_red = std::vector<Node>(redSize + 1);
