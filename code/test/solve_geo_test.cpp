@@ -35,17 +35,29 @@ int main(int argc, char *argv[]){
     if(argc > 4)
         version = atoi(argv[4]);
 
+    // time measurement
+    double start = clock();
+
     // solve
     HRG_CLIQUE::MaxClique solver(adjs, n, version, geo, R);
     solver.run();
     std::vector<int> clique = solver.getMaxClique();
 
+    // time measurement (ms)
+    double end = clock();
+    double time = (end - start) / (CLOCKS_PER_SEC / 1000);
+
     // output
     std::ofstream ofs;
     ofs.open(OUTFILE);
-    ofs << clique.size() << std::endl;
-    for(int i=0; i<clique.size(); i++){
+    int clique_size = clique.size();
+    ofs << clique_size << std::endl;
+    for(int i=0; i<clique_size; i++){
         ofs << clique[i] << " ";
     }
     ofs << std::endl;
+    ofs << time << std::endl;
+    ofs.close();
+
+    return 0;
 }

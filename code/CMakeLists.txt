@@ -35,3 +35,9 @@ target_include_directories(HRG_Clique PUBLIC ${include_dir})
 
 add_executable(reduction_test test/reduction_test.cpp)
 target_link_libraries(reduction_test HRG_Clique)
+
+add_executable(solve_geo_test test/solve_geo_test.cpp)
+target_link_libraries(solve_geo_test HRG_Clique)
+
+add_executable(solve_nongeo_test test/solve_nongeo_test.cpp)
+target_link_libraries(solve_nongeo_test HRG_Clique)
