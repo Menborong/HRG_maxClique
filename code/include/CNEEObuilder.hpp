@@ -14,12 +14,13 @@ class CNEEObuilder {
 
    private:
     int N;
+    int leftEdges;
     std::vector<std::list<int>> adjList;
     std::queue<std::pair<std::list<int>::iterator, std::list<int>::iterator>>
         edgeQ;
     std::vector<int> V;
     std::vector<int> VBits;
-    std::vector<int> cache_mark;
+    // std::vector<int> cache_mark;
     std::vector<int> cache_color;
     std::vector<std::pair<int, int>> CNEEO;
     std::vector<std::pair<int, int>> fails;
