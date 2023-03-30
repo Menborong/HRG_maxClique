@@ -37,7 +37,8 @@ class CNEEObuilder {
     void getCommonNeighbors(int u, int v);
     void clearCommonCache(int u, int v);
     /**
-     * @brief check if the current graph (V) is a co-bipartite graph
+     * @brief check if the current induced subgraph is a co-bipartite graph
+     * @details time complexity: O(N+M)
      */
     bool chkCoBip();
     /**
