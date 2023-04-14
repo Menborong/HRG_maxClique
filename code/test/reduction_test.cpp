@@ -3,11 +3,15 @@
 #include "Reduction.hpp"
 #include "Graph.hpp"
 
+// input_filename 
+
 int main(int argc, char *argv[]) {
     (void)argc;
-    std::ifstream ifs;
-    // read graph
     std::string FILENAME1 = argv[1];
+    std::string OUTFILE = argv[2];
+
+    // read graph
+    std::ifstream ifs;
     ifs.open(FILENAME1);
     int n, m;
     ifs >> n >> m;
@@ -21,8 +25,6 @@ int main(int argc, char *argv[]) {
     }
     ifs.close();
 
-    std::string OUTFILE = argv[2];
-
     // get initial solution (maximal)
     std::vector<int> clique = HRG_CLIQUE::getMaximalClique(adjs, n);
     int initial_size = clique.size();
@@ -31,7 +33,7 @@ int main(int argc, char *argv[]) {
 
     // output
     std::ofstream ofs;
-    ofs.open(OUTFILE);
+    ofs.open(OUTFILE, std::ios::app);
     ofs << red.getRedSize() << std::endl;
     ofs.close();
 
