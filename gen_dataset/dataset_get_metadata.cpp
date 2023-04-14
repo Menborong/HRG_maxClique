@@ -10,18 +10,21 @@ int main(int argc, char* argv[]){
     double alpha = atof(argv[2]);
     double T = atof(argv[3]);
     double deg = atof(argv[4]);
+    std::string out_name(argv[5]);
 
     auto R = calculateRadius(N, alpha, T, deg);
 
-    std::string out_name(argv[5]);
-    std::ofstream fout(out_name);
-    fout << std::fixed;
-    fout.precision(17);
-    fout << N << '\n';
-    fout << alpha << '\n';
-    fout << T << '\n';
-    fout << deg << '\n';
-    fout << R << '\n';
+    std::stringstream ss;
+    ss << std::fixed;
+    ss.precision(17);
+    ss << R << '\n';
+
+    std::ifstream fin(out_name);
+    ss << fin.rdbuf();
+    fin.close();
+
+    std::ofstream fout(out_name, std::ios::out);
+    fout << ss.rdbuf();
 
     return 0;
 }
