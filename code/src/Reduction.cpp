@@ -1,9 +1,7 @@
 #include "Reduction.hpp"
-
+#include "Graph.hpp"
 #include <queue>
 #include <vector>
-
-#include "Graph.hpp"
 
 // using namespace std;
 // using vInt = vector<int>;
@@ -41,7 +39,7 @@ Reduction::Reduction(const std::vector<std::vector<int>>& adjs, const int N,
     fwdId = std::vector<int>(N + 1, -1);
     bwdId = std::vector<int>(1, 0);
     for (int i = 1; i <= N; i++) {
-        if (degree[i] >= redSize) {
+        if (degree[i] >= initSize) {
             fwdId[i] = ++redSize;
             bwdId.push_back(i);
         }
