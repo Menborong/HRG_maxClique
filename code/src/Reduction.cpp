@@ -1,7 +1,9 @@
 #include "Reduction.hpp"
-#include "Graph.hpp"
+
 #include <queue>
 #include <vector>
+
+#include "Graph.hpp"
 
 // using namespace std;
 // using vInt = vector<int>;
@@ -13,8 +15,8 @@ Reduction::Reduction(const std::vector<std::vector<int>>& adjs, const int N,
                      const int initSize) {
     // BFS scheme
     std::queue<int> q;
-    std::vector<int> degree(N + 1);
-    for (int i = 1; i <= N; i++) {
+    std::vector<int> degree(N);
+    for (int i = 0; i < N; i++) {
         degree[i] = adjs[i].size();
         if (degree[i] < initSize) {
             q.push(i);
@@ -36,18 +38,18 @@ Reduction::Reduction(const std::vector<std::vector<int>>& adjs, const int N,
     }
 
     redSize = 0;
-    fwdId = std::vector<int>(N + 1, -1);
-    bwdId = std::vector<int>(1, 0);
-    for (int i = 1; i <= N; i++) {
+    fwdId = std::vector<int>(N, -1);
+    bwdId = std::vector<int>();
+    for (int i = 0; i < N; i++) {
         if (degree[i] >= initSize) {
-            fwdId[i] = ++redSize;
+            fwdId[i] = redSize++;
             bwdId.push_back(i);
         }
     }
 
     // reconstruct adjs list
-    adjs_red = std::vector<std::vector<int>>(redSize + 1);
-    for (int i = 1; i <= N; i++) {
+    adjs_red = std::vector<std::vector<int>>(redSize);
+    for (int i = 0; i < N; i++) {
         if (fwdId[i] == -1) continue;
         for (int j : adjs[i]) {
             if (fwdId[j] == -1) continue;
@@ -57,11 +59,11 @@ Reduction::Reduction(const std::vector<std::vector<int>>& adjs, const int N,
 }
 
 Reduction::Reduction(const std::vector<std::vector<int>>& adjs,
-                     const std::vector<Node>& geometry,
-                     const int N, const int initSize) {
-    Reduction(adjs, N, initSize);
-    geo_red = std::vector<Node>(redSize + 1);
-    for (int i = 1; i <= redSize; i++) geo_red[i] = geometry[bwdId[i]];
+                     const std::vector<Node>& geometry, const int N,
+                     const int initSize)
+    : Reduction(adjs, N, initSize) {
+    geo_red = std::vector<Node>(redSize);
+    for (int i = 0; i < redSize; i++) geo_red[i] = geometry[bwdId[i]];
 }
 
 }  // namespace HRG_CLIQUE

@@ -13,11 +13,11 @@ HRG_CLIQUE::CNEEObuilder::CNEEObuilder(std::vector<std::vector<int>> &adjs,
     CNEEO = std::vector<std::pair<int, int>>();
     fails = std::vector<std::pair<int, int>>();
     V = std::vector<int>();
-    VBits = std::vector<int>(N + 1, 0);
+    VBits = std::vector<int>(N, 0);
     // cache_mark = std::vector<int>(N + 1, 0);
-    cache_color = std::vector<int>(N + 1, 0);
-    adjList = std::vector<std::list<int>>(N + 1);
-    for (int u = 1; u <= N; u++) {
+    cache_color = std::vector<int>(N, 0);
+    adjList = std::vector<std::list<int>>(N);
+    for (int u = 0; u < N; u++) {
         for (int v : adjs[u]) {
             if (u > v) continue;
             adjList[u].push_back(v);
@@ -216,7 +216,7 @@ void HRG_CLIQUE::CNEEObuilder::CNEEO_ver1() {
 void HRG_CLIQUE::CNEEObuilder::CNEEO_ver2() {
     std::list<std::pair<std::list<int>::iterator, std::list<int>::iterator>>
         failCont;
-    std::vector<std::list<FailNode>> failList(N + 1);
+    std::vector<std::list<FailNode>> failList(N);
 
     while (!edgeQ.empty()) {
         auto it1 = edgeQ.front().first;

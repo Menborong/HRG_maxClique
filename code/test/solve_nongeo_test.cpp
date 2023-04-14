@@ -9,7 +9,7 @@ int main(int argc, char *argv[]){
     int n, m;
     ifs >> n >> m;
 
-    std::vector<std::vector<int>> adjs(n+1);
+    std::vector<std::vector<int>> adjs(n);
     for(int i=0; i<m; i++){
         int a, b;
         ifs >> a >> b;

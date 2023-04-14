@@ -2,7 +2,7 @@
 #include <vector>
 
 #include "Graph.hpp"
-#include "VertexCover.hpp"
+#include "BipartiteIndep.hpp"
 
 namespace HRG_CLIQUE {
 

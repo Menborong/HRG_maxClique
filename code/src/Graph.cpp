@@ -1,4 +1,5 @@
 #include "Graph.hpp"
+#include <gsl/gsl_math.h>
 
 double HRG_CLIQUE::getDist(const Node& a, const Node& b) {
     if (a.phi == b.phi) return abs(a.r - b.r);

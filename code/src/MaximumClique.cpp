@@ -1,12 +1,12 @@
 #include "MaximumClique.hpp"
-
-#include <cmath>
-#include <vector>
-
 #include "CNEEObuilder.hpp"
 #include "Graph.hpp"
 #include "MaximalClique.hpp"
 #include "Reduction.hpp"
+#include "BipartiteIndep.hpp"
+
+#include <vector>
+
 
 void HRG_CLIQUE::MaxClique::run() {
     // initalize solution
@@ -80,12 +80,12 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV1() {
 
     // reconstruct the graph
     // add the edges in reverse order of CNEEO
-    std::vector<vector<int>> newAdjs(redSize + 1);
+    std::vector<vector<int>> newAdjs(redSize);
 
     // this adjs matrix is reuse for the efficiency
-    std::vector<std::vector<int>> cobipartite(redSize + 1);
-    std::vector<int> commonCache(redSize + 1, 0);
-    std::vector<int> neighborCache(redSize + 1, 0);
+    std::vector<std::vector<int>> cobipartite(redSize);
+    std::vector<int> commonCache(redSize, 0);
+    std::vector<int> neighborCache(redSize, 0);
 
     // main iteration
     for (int i = CNEEO.size() - 1; i >= 0; i--) {
@@ -162,7 +162,7 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV1() {
         }
 
         // get candidate clique
-        std::vector<int> candidate = getCobipMaxClique(vertices, cobipartite);
+        std::vector<int> candidate = getBipartiteIndep(vertices, cobipartite);
         candidate.push_back(u);
         candidate.push_back(v);
 
@@ -210,12 +210,12 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV2() {
 
     // reconstruct the graph
     // add the edges in reverse order of CNEEO
-    std::vector<vector<int>> newAdjs(redSize + 1);
+    std::vector<vector<int>> newAdjs(redSize);
 
     // this adjs matrix is reuse for the efficiency
-    std::vector<std::vector<int>> cobipartite(redSize + 1);
-    std::vector<int> commonCache(redSize + 1, 0);
-    std::vector<int> neighborCache(redSize + 1, 0);
+    std::vector<std::vector<int>> cobipartite(redSize);
+    std::vector<int> commonCache(redSize, 0);
+    std::vector<int> neighborCache(redSize, 0);
 
     // main iteration
     for (int i = CNEEO.size() - 1; i >= 0; i--) {
@@ -292,7 +292,7 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV2() {
         }
 
         // get candidate clique
-        std::vector<int> candidate = getCobipMaxClique(vertices, cobipartite);
+        std::vector<int> candidate = getBipartiteIndep(vertices, cobipartite);
         candidate.push_back(u);
         candidate.push_back(v);
 
@@ -324,10 +324,10 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV2() {
 
 void HRG_CLIQUE::MaxClique::maxCliqueGeoV1() {
     // this adjs matrix is reused for the efficiency
-    std::vector<std::vector<int>> cobipartite(N + 1);
+    std::vector<std::vector<int>> cobipartite(N);
 
     // main iteration
-    for (int u = 1; u <= N; u++) {
+    for (int u = 0; u < N; u++) {
         for (int v : adjs[u]) {
             double d = getDist(geometry[u], geometry[v]);
             // construct co-bipartite graph
@@ -357,9 +357,10 @@ void HRG_CLIQUE::MaxClique::maxCliqueGeoV1() {
 
             // get clique
             std::vector<int> candidate =
-                getCobipMaxClique(vertices, cobipartite);
+                getBipartiteIndep(vertices, cobipartite);
             candidate.push_back(u);
             candidate.push_back(v);
+            
 
             // update solution
             if (candidate.size() > maxClique.size()) {
@@ -388,10 +389,10 @@ void HRG_CLIQUE::MaxClique::maxCliqueGeoV2() {
     std::vector<Node> geo_red = red.getGeo_red();
 
     // this adjs matrix is reused for the efficiency
-    std::vector<std::vector<int>> cobipartite(redSize + 1);
+    std::vector<std::vector<int>> cobipartite(redSize);
 
     // main iteration
-    for (int u = 1; u <= redSize; u++) {
+    for (int u = 0; u < redSize; u++) {
         for (int v : adjs_red[u]) {
             double d = getDist(geo_red[u], geo_red[v]);
             if (d > R) continue;
@@ -421,7 +422,7 @@ void HRG_CLIQUE::MaxClique::maxCliqueGeoV2() {
 
             // get clique
             std::vector<int> candidate =
-                getCobipMaxClique(vertices, cobipartite);
+                getBipartiteIndep(vertices, cobipartite);
             candidate.push_back(u);
             candidate.push_back(v);
 
@@ -459,10 +460,10 @@ void HRG_CLIQUE::MaxClique::maxCliqueGeoV3() {
     std::vector<Node> geo_red = red.getGeo_red();
 
     // this adjs matrix is reused for the efficiency
-    std::vector<std::vector<int>> cobipartite(redSize + 1);
+    std::vector<std::vector<int>> cobipartite(redSize);
 
     // main iteration
-    for (int u = 1; u <= redSize; u++) {
+    for (int u = 0; u < redSize; u++) {
         if (adjs_red[u].size() < maxClique.size()) continue;
         for (int v : adjs_red[u]) {
             if (adjs_red[v].size() < maxClique.size()) continue;
@@ -495,7 +496,7 @@ void HRG_CLIQUE::MaxClique::maxCliqueGeoV3() {
 
             // get clique
             std::vector<int> candidate =
-                getCobipMaxClique(vertices, cobipartite);
+                getBipartiteIndep(vertices, cobipartite);
             candidate.push_back(u);
             candidate.push_back(v);
 
@@ -534,10 +535,11 @@ void HRG_CLIQUE::MaxClique::maxCliqueGeoV4() {
 
     // collect edges
     std::vector<Edge> edges;
-    for (int u = 1; u <= redSize; u++) {
+    for (int u = 0; u < redSize; u++) {
         for (int v : adjs_red[u]) {
             if (u > v) continue;  // avoid duplicate (u, v)
             double d = getDist(geo_red[u], geo_red[v]);
+            // if (d > R) continue;
             edges.push_back({u, v, d});
         }
     }
@@ -546,10 +548,10 @@ void HRG_CLIQUE::MaxClique::maxCliqueGeoV4() {
     std::sort(edges.begin(), edges.end(),
               [](const Edge& a, const Edge& b) { return a.d > b.d; });
 
-    std::vector<vector<int>> newAdjs(redSize + 1);
-    std::vector<vector<int>> cobipartite(redSize + 1);
-    std::vector<int> commonCache(redSize + 1, 0);
-    std::vector<int> neighborCache(redSize + 1, 0);
+    std::vector<vector<int>> newAdjs(redSize);
+    std::vector<vector<int>> cobipartite(redSize);
+    std::vector<int> commonCache(redSize, 0);
+    std::vector<int> neighborCache(redSize, 0);
 
     // main iteration
     for (int i = edges.size() - 1; i >= 0; i--) {
@@ -626,7 +628,7 @@ void HRG_CLIQUE::MaxClique::maxCliqueGeoV4() {
         }
 
         // get candidate clique
-        std::vector<int> candidate = getCobipMaxClique(vertices, cobipartite);
+        std::vector<int> candidate = getBipartiteIndep(vertices, cobipartite);
         candidate.push_back(u);
         candidate.push_back(v);
 

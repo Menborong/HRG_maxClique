@@ -1,6 +1,5 @@
 #pragma once
-
-#include <cmath>
+#include <gsl/gsl_math.h>
 
 namespace HRG_CLIQUE {
 

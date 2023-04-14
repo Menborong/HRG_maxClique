@@ -11,7 +11,7 @@ int main(int argc, char *argv[]){
     int n, m;
     ifs >> n >> m;
 
-    std::vector<std::vector<int>> adjs(n+1);
+    std::vector<std::vector<int>> adjs(n);
     for(int i=0; i<m; i++){
         int a, b;
         ifs >> a >> b;
@@ -26,8 +26,8 @@ int main(int argc, char *argv[]){
 
     double R;
     ifs >> R;
-    std::vector<HRG_CLIQUE::Node> geo(n+1);
-    for(int i=1; i<=n; i++){
+    std::vector<HRG_CLIQUE::Node> geo(n);
+    for(int i=0; i<n; i++){
         ifs >> geo[i].r >> geo[i].phi;
     }
     ifs.close();

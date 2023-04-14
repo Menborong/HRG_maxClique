@@ -12,7 +12,7 @@ set(SOURCES
     ${source_dir}/Reduction.cpp
     ${source_dir}/CNEEObuilder.cpp
     ${source_dir}/MaximalClique.cpp
-    ${source_dir}/VertexCover.cpp
+    ${source_dir}/BipartiteIndep.cpp
     ${source_dir}/MaximumClique.cpp
 )
 
@@ -21,7 +21,7 @@ set(HEADERS
     ${include_dir}/Reduction.hpp
     ${include_dir}/CNEEObuilder.hpp
     ${include_dir}/MaximalClique.hpp
-    ${include_dir}/VertexCover.hpp
+    ${include_dir}/BipartiteIndep.hpp
     ${include_dir}/MaximumClique.hpp
 )
 
