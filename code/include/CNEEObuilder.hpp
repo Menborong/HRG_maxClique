@@ -13,17 +13,27 @@ class CNEEObuilder {
     std::vector<std::pair<int, int>>& getFails() { return fails; }
 
    private:
-    int N;
-    int leftEdges;
-    std::vector<std::list<int>> adjList;
+    // int N;
+    // int leftEdges;
+    int numV;
+    int numE;
+    std::vector<std::vector<int>> adjs; // input graph
+    std::vector<std::vector<int>> adjsC; // complement graph of induced subgraph of common neighbors
+    std::vector<std::list<int>> adjList; // subgraph of remaining edges
+
+    // cache list
+    std::vector<int> cache_color; // cache for 2-coloring
+    std::vector<int> cache_neighbor; // cache for finding complement graph
+    std::vector<int> V; // common neighbors
+    std::vector<int> VBits; // common neighbors bitset
+
+    std::vector<std::pair<int, int>> CNEEO; // solution
+    std::vector<std::pair<int, int>> fails; // failed edges (if input graph does not accept CNEEO)
+
     std::queue<std::pair<std::list<int>::iterator, std::list<int>::iterator>>
-        edgeQ;
-    std::vector<int> V;
-    std::vector<int> VBits;
-    // std::vector<int> cache_mark;
-    std::vector<int> cache_color;
-    std::vector<std::pair<int, int>> CNEEO;
-    std::vector<std::pair<int, int>> fails;
+        edgeQ; // queue of edges that have potential to be added
+
+    // only use for version 2
     struct FailNode {
         int v;
         std::list<FailNode>::iterator failList_it;
