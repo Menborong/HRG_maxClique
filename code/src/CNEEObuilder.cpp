@@ -7,25 +7,37 @@
 #include <vector>
 
 HRG_CLIQUE::CNEEObuilder::CNEEObuilder(std::vector<std::vector<int>> &adjs,
-                                       int N, int version) {
-    this->N = N;
-    leftEdges = 0;
-    CNEEO = std::vector<std::pair<int, int>>();
-    fails = std::vector<std::pair<int, int>>();
-    V = std::vector<int>();
-    VBits = std::vector<int>(N, 0);
-    // cache_mark = std::vector<int>(N + 1, 0);
-    cache_color = std::vector<int>(N, 0);
-    adjList = std::vector<std::list<int>>(N);
-    for (int u = 0; u < N; u++) {
+                                       int numV, int version) {
+    this->numV = numV;
+    this->numE = 0;
+    for (int u = 0; u < numV; u++) {
+        this->numE += adjs[u].size();
+    }
+    this->numE /= 2;
+    
+    // initialize graph container
+    this->adjs = adjs;
+    adjsC = std::vector<std::vector<int>>(numV);
+    adjList = std::vector<std::list<int>>(numV);
+    for (int u = 0; u < numV; u++) {
         for (int v : adjs[u]) {
             if (u > v) continue;
             adjList[u].push_back(v);
             adjList[v].push_back(u);
             edgeQ.push({prev(adjList[v].end()), prev(adjList[u].end())});
-            leftEdges++;
         }
     }
+
+    // initialize cache;
+    cache_color = std::vector<int>(numV, 0);
+    cache_neighbor = std::vector<int>(numV, 0);
+    V = std::vector<int>();
+    VBits = std::vector<int>(numV, 0);
+
+    // initialize solution container
+    CNEEO = std::vector<std::pair<int, int>>();
+    fails = std::vector<std::pair<int, int>>();
+    
 
     switch (version) {
         case 1:
@@ -118,62 +130,114 @@ void HRG_CLIQUE::CNEEObuilder::clearCommonCache(int u, int v) {
 //     return true;
 // }
 
+// bool HRG_CLIQUE::CNEEObuilder::chkCoBip() {
+//     long long numV = V.size();
+//     // check if the number of vertices is too large
+//     if (leftEdges < (numV - 1) * (numV - 1) / 2) return false;
+
+//     // now |V'| = O(sqrt(|E|)
+//     // calculate the number of edges of the complement graph of induced subgraph
+//     long long numE = numV * (numV - 1) / 2;
+//     for (int u : V) {
+//         for (int v : adjList[u]) {
+//             if (v < u) continue;
+//             if (VBits[v]) numE--;
+//         }
+//     }
+//     // too much edges cannot be bipartite
+//     if (numV * numV / 4 < numE) return false;
+
+//     // construct complement graph
+//     std::vector<std::vector<int>> adjListC(numV);
+//     for (int u : V) {
+//         for (int v : adjList[u]) {
+//             if (v < u) continue;
+//             if (!VBits[v]) {
+//                 adjListC[u].push_back(v);
+//                 adjListC[v].push_back(u);
+//             }
+//         }
+//     }
+
+//     // check if the complement graph is bipartite
+//     // initialize cache;
+//     for (int u : V) {
+//         cache_color[u] = 0;
+//     }
+
+//     // BFS
+//     std::queue<int> q;
+//     for (int u : V) {
+//         if (cache_color[u]) continue;
+//         cache_color[u] = 1;
+//         q.push(u);
+//         while (!q.empty()) {
+//             int tar = q.front();
+//             q.pop();
+//             // check bipartiteness
+//             for (int nxt : adjListC[tar]) {
+//                 if (cache_color[nxt] == cache_color[tar]) return false;
+//                 if (cache_color[nxt] && cache_color[nxt] != cache_color[tar])
+//                     continue;
+//                 cache_color[nxt] = 3 - cache_color[tar];
+//                 q.push(nxt);
+//             }
+//         }
+//     }
+
+//     return true;
+// }
+
 bool HRG_CLIQUE::CNEEObuilder::chkCoBip() {
-    long long numV = V.size();
+    long long numVp = V.size();
+    if(numVp == 0) return true;
     // check if the number of vertices is too large
-    if (leftEdges < (numV - 1) * (numV - 1) / 2) return false;
-
     // now |V'| = O(sqrt(|E|)
-    // calculate the number of edges of the complement graph of induced subgraph
-    long long numE = numV * (numV - 1) / 2;
-    for (int u : V) {
-        for (int v : adjList[u]) {
-            if (v < u) continue;
-            if (VBits[v]) numE--;
-        }
-    }
-    // too much edges cannot be bipartite
-    if (numV * numV / 4 < numE) return false;
+    if (numE < (numVp - 1) * (numVp - 1) / 2) return false;
 
-    // construct complement graph
-    std::vector<std::vector<int>> adjListC(numV);
-    for (int u : V) {
-        for (int v : adjList[u]) {
-            if (v < u) continue;
-            if (!VBits[v]) {
-                adjListC[u].push_back(v);
-                adjListC[v].push_back(u);
-            }
+    // constructing complement graph (O(E + V'^2) = O(E))
+    for(int u: V){
+        for(int v: adjs[u])
+            if(VBits[v]) cache_neighbor[v]++;
+        for(int v: V){
+            if(u == v) continue;
+            if(cache_neighbor[v] == 0) adjsC[u].push_back(v);
         }
+        for(int v: adjs[u])
+            if(VBits[v]) cache_neighbor[v]--;
     }
 
     // check if the complement graph is bipartite
-    // initialize cache;
-    for (int u : V) {
-        cache_color[u] = 0;
-    }
-
-    // BFS
-    std::queue<int> q;
-    for (int u : V) {
-        if (cache_color[u]) continue;
+    bool is_bipartite = true;
+    for(int u: V){
+        if(cache_color[u]) continue;
         cache_color[u] = 1;
+        std::queue<int> q;
         q.push(u);
-        while (!q.empty()) {
+        while(!q.empty()){
             int tar = q.front();
             q.pop();
-            // check bipartiteness
-            for (int nxt : adjListC[tar]) {
-                if (cache_color[nxt] == cache_color[tar]) return false;
-                if (cache_color[nxt] && cache_color[nxt] != cache_color[tar])
-                    continue;
+            for(int nxt: adjsC[tar]){
+                if(cache_color[nxt] == cache_color[tar]){
+                    is_bipartite = false;
+                    break;
+                }
+                if(cache_color[nxt] && cache_color[nxt] != cache_color[tar]) continue;
                 cache_color[nxt] = 3 - cache_color[tar];
                 q.push(nxt);
             }
+            if(!is_bipartite) break;
         }
+        if(!is_bipartite) break;
     }
 
-    return true;
+    // clear cache
+    for(int u: V){
+        cache_color[u] = 0;
+        adjsC[u].clear();
+    }
+
+    return is_bipartite;
 }
 
 void HRG_CLIQUE::CNEEObuilder::CNEEO_ver1() {
@@ -194,7 +258,6 @@ void HRG_CLIQUE::CNEEObuilder::CNEEO_ver1() {
 
         if (result) {
             CNEEO.push_back({u, v});
-            leftEdges--;
             adjList[v].erase(it1);
             adjList[u].erase(it2);
             while (!failCont.empty()) {
@@ -216,7 +279,7 @@ void HRG_CLIQUE::CNEEObuilder::CNEEO_ver1() {
 void HRG_CLIQUE::CNEEObuilder::CNEEO_ver2() {
     std::list<std::pair<std::list<int>::iterator, std::list<int>::iterator>>
         failCont;
-    std::vector<std::list<FailNode>> failList(N);
+    std::vector<std::list<FailNode>> failList(numV);
 
     while (!edgeQ.empty()) {
         auto it1 = edgeQ.front().first;
@@ -232,7 +295,6 @@ void HRG_CLIQUE::CNEEObuilder::CNEEO_ver2() {
 
         if (result) {
             CNEEO.push_back({u, v});
-            leftEdges--;
             adjList[v].erase(it1);
             adjList[u].erase(it2);
 

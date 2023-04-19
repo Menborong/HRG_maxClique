@@ -2,3 +2,4 @@ gen_dataset/dataset
 real_dataset
 build
 .vscode
+results
