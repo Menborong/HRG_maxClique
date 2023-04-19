@@ -1,6 +1,8 @@
 #include "MaximumClique.hpp"
 #include "Graph.hpp"
 
+// input_graph output_filename (version) 
+
 int main(int argc, char *argv[]){
     std::ifstream ifs;
     // read graph
@@ -37,7 +39,7 @@ int main(int argc, char *argv[]){
 
     // output
     std::ofstream ofs;
-    ofs.open(OUTFILE);
+    ofs.open(OUTFILE, std::ios::app);
     int clique_size = clique.size();
     ofs << clique_size << std::endl;
     for(int i=0; i<clique_size; i++){

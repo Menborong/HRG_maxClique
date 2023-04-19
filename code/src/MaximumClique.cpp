@@ -77,7 +77,7 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV1() {
     // construct CNEEO
     CNEEObuilder CNEEObuild(adjs_red, redSize, 1);
     std::vector<std::pair<int, int>> CNEEO = CNEEObuild.getCNEEO();
-
+    
     // reconstruct the graph
     // add the edges in reverse order of CNEEO
     std::vector<vector<int>> newAdjs(redSize);
@@ -126,11 +126,11 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV1() {
             continue;
         }
 
-        // need constructing complement graph of induced subgraph
+        // need constructing complement graph of induced subgraph of G
         // time complexity: O(|V|^2)
         for (int a : vertices) {
             // check neighbors in a graph
-            for (int nei : newAdjs[a]) {
+            for (int nei : adjs_red[a]) {
                 if (nei == u || nei == v) continue;
                 if (commonCache[nei] == 2) {
                     neighborCache[nei]++;
@@ -146,7 +146,7 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV1() {
             }
 
             // clear neighborCache
-            for (int nei : newAdjs[a]) {
+            for (int nei : adjs_red[a]) {
                 if (commonCache[nei] == 2) {
                     neighborCache[nei] = 0;
                 }
@@ -260,7 +260,7 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV2() {
         // time complexity: O(|V|^2)
         for (int a : vertices) {
             // check neighbors in a graph
-            for (int nei : newAdjs[a]) {
+            for (int nei : adjs_red[a]) {
                 if (nei == u || nei == v) continue;
                 if (commonCache[nei] == 2) {
                     neighborCache[nei]++;
@@ -276,7 +276,7 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV2() {
             }
 
             // clear neighborCache
-            for (int nei : newAdjs[a]) {
+            for (int nei : adjs_red[a]) {
                 if (commonCache[nei] == 2) {
                     neighborCache[nei] = 0;
                 }

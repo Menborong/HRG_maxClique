@@ -6,7 +6,7 @@ void HRG_CLIQUE::MinVertexCover::bfs(){
     queue<int> q;
     // initialize level graph
     for (int x = 0; x < NX; x++) {
-        if (XtoY[x] == -1)
+        if (XtoY[x] != -1)
             level[x] = INF;
         else {
             level[x] = 0;
