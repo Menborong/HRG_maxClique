@@ -1,5 +1,10 @@
+#include <fstream>
+
 #include "MaximumClique.hpp"
+#include "Reduction.hpp"
+#include "MaximalClique.hpp"
 #include "Graph.hpp"
+
 
 // input_graph output_filename (version) 
 
@@ -37,12 +42,17 @@ int main(int argc, char *argv[]){
     double end = clock();
     double time = (end - start) / (CLOCKS_PER_SEC / 1000);
 
+    // reduction test
+    std::vector<int> init_clique = HRG_CLIQUE::getMaximalClique(adjs, n);
+    HRG_CLIQUE::Reduction red(adjs, n, init_clique.size());
+
     // output
     std::ofstream ofs;
     ofs.open(OUTFILE, std::ios::app);
 
     ofs << n << std::endl; // input size
-    ofs << time << std::endl; // running time
+
+    ofs << init_clique.size() << " " << red.getRedSize() << std::endl;
 
     int clique_size = clique.size();
     ofs << clique_size << std::endl;
@@ -68,7 +78,9 @@ int main(int argc, char *argv[]){
         }
     }
 
-    ofs << leftV << ' ' << leftE << std::endl;
+    ofs << leftV << ' ' << leftE << std::endl; // left graph size
+
+    ofs << time << std::endl; // running time
 
     ofs.close();
 

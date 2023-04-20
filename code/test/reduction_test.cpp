@@ -1,4 +1,5 @@
 #include <fstream>
+
 #include "MaximalClique.hpp"
 #include "Reduction.hpp"
 #include "Graph.hpp"

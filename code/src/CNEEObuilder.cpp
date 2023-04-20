@@ -1,12 +1,11 @@
-#include "CNEEObuilder.hpp"
-
 #include <cassert>
 #include <list>
 #include <queue>
 #include <utility>
 #include <vector>
-
 #include <iostream>
+
+#include "CNEEObuilder.hpp"
 
 HRG_CLIQUE::CNEEObuilder::CNEEObuilder(std::vector<std::vector<int>> &adjs,
                                        int numV, int version) {

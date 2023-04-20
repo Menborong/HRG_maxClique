@@ -1,6 +1,7 @@
 #pragma once
 
-#include <bits/stdc++.h>
+#include <vector>
+
 using namespace std;
 using vInt = vector<int>;
 using matInt = vector<vInt>;

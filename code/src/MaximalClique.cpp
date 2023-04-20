@@ -1,6 +1,6 @@
-#include "MaximalClique.hpp"
-
 #include <vector>
+
+#include "MaximalClique.hpp"
 
 std::vector<int> HRG_CLIQUE::getMaximalClique(
     const std::vector<std::vector<int>>& adjs, const int N) {

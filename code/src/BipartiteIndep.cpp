@@ -1,6 +1,8 @@
-#include "BipartiteIndep.hpp"
-
 #include <vector>
+#include <queue>
+#include <cassert>
+
+#include "BipartiteIndep.hpp"
 
 void HRG_CLIQUE::MinVertexCover::bfs(){
     queue<int> q;

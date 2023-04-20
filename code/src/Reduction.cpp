@@ -1,8 +1,7 @@
-#include "Reduction.hpp"
-
 #include <queue>
 #include <vector>
 
+#include "Reduction.hpp"
 #include "Graph.hpp"
 
 // using namespace std;

@@ -1,11 +1,13 @@
+#include <vector>
+#include <cassert>
+#include <algorithm>
+
 #include "MaximumClique.hpp"
 #include "CNEEObuilder.hpp"
 #include "Graph.hpp"
 #include "MaximalClique.hpp"
 #include "Reduction.hpp"
 #include "BipartiteIndep.hpp"
-
-#include <vector>
 
 
 void HRG_CLIQUE::MaxClique::run() {
