@@ -6,6 +6,8 @@
 #include <utility>
 #include <vector>
 
+#include <iostream>
+
 HRG_CLIQUE::CNEEObuilder::CNEEObuilder(std::vector<std::vector<int>> &adjs,
                                        int numV, int version) {
     this->numV = numV;
@@ -243,6 +245,9 @@ bool HRG_CLIQUE::CNEEObuilder::chkCoBip() {
 void HRG_CLIQUE::CNEEObuilder::CNEEO_ver1() {
     std::queue<std::pair<std::list<int>::iterator, std::list<int>::iterator>>
         failCont;
+        
+    int lastChk = 0; // for debug
+    int lastCount = 0;
 
     while (!edgeQ.empty()) {
         auto it1 = edgeQ.front().first;
@@ -264,6 +269,14 @@ void HRG_CLIQUE::CNEEObuilder::CNEEO_ver1() {
                 edgeQ.push(failCont.front());
                 failCont.pop();
             }
+
+            lastCount++;
+            if(lastChk < lastCount){
+                lastChk += numE/100;
+                std::cout << "\rprogress: " << lastCount << "/" << numE;
+                std::cout.flush();
+            }
+            
         } else {
             failCont.push({it1, it2});
         }
@@ -280,6 +293,9 @@ void HRG_CLIQUE::CNEEObuilder::CNEEO_ver2() {
     std::list<std::pair<std::list<int>::iterator, std::list<int>::iterator>>
         failCont;
     std::vector<std::list<FailNode>> failList(numV);
+
+    int lastChk = 0; // for debug
+    int lastCount = 0;
 
     while (!edgeQ.empty()) {
         auto it1 = edgeQ.front().first;
@@ -310,6 +326,13 @@ void HRG_CLIQUE::CNEEObuilder::CNEEO_ver2() {
             }
             failList[u].clear();
             failList[v].clear();
+
+            lastCount++;
+            if(lastChk < lastCount){
+                lastChk += numE/100;
+                std::cout << "\rprogress: " << lastCount << "/" << numE;
+                std::cout.flush();
+            }
         } else {
             failCont.push_back({it1, it2});
             failList[u].push_back({v, failList[u].end(), prev(failCont.end())});

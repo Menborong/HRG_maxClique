@@ -41,3 +41,6 @@ target_link_libraries(solve_geo_test HRG_Clique)
 
 add_executable(solve_nongeo_test test/solve_nongeo_test.cpp)
 target_link_libraries(solve_nongeo_test HRG_Clique)
+
+add_executable(solve_general_test test/solve_general_test.cpp)
+target_link_libraries(solve_general_test HRG_Clique)

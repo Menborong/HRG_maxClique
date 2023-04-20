@@ -87,6 +87,16 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV1() {
     std::vector<int> commonCache(redSize, 0);
     std::vector<int> neighborCache(redSize, 0);
 
+    // add all failed edges to new adjacnet matrix
+    failedEdges = CNEEObuild.getFails();
+    int failSize = failedEdges.size();
+    for(int i=0; i<failSize; i++){
+        int u = failedEdges[i].first;
+        int v = failedEdges[i].second;
+        newAdjs[u].push_back(v);
+        newAdjs[v].push_back(u);
+    }
+
     // main iteration
     for (int i = CNEEO.size() - 1; i >= 0; i--) {
         int u = CNEEO[i].first;
@@ -185,7 +195,6 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV1() {
     }
 
     // get failed edges & restore the vertex number
-    failedEdges = CNEEObuild.getFails();
     for (auto& e : failedEdges) {
         e.first = bwdId[e.first];
         e.second = bwdId[e.second];
@@ -216,6 +225,16 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV2() {
     std::vector<std::vector<int>> cobipartite(redSize);
     std::vector<int> commonCache(redSize, 0);
     std::vector<int> neighborCache(redSize, 0);
+
+    // add all failed edges to new adjacnet matrix
+    failedEdges = CNEEObuild.getFails();
+    int failSize = failedEdges.size();
+    for(int i=0; i<failSize; i++){
+        int u = failedEdges[i].first;
+        int v = failedEdges[i].second;
+        newAdjs[u].push_back(v);
+        newAdjs[v].push_back(u);
+    }
 
     // main iteration
     for (int i = CNEEO.size() - 1; i >= 0; i--) {
