@@ -6,6 +6,8 @@
 #include <iostream>
 
 #include "CNEEObuilder.hpp"
+#include "BipartiteIndep.hpp"
+
 
 HRG_CLIQUE::CNEEObuilder::CNEEObuilder(std::vector<std::vector<int>> &adjs,
                                        int numV, int version) {
@@ -125,6 +127,10 @@ bool HRG_CLIQUE::CNEEObuilder::chkCoBip() {
         if(!is_bipartite) break;
     }
 
+    if(is_bipartite){
+        getBipartiteIndep(V, adjsC);
+    }
+
     // clear cache
     for(int u: V){
         cache_color[u] = 0;
@@ -186,6 +192,8 @@ void HRG_CLIQUE::CNEEObuilder::CNEEO_ver2() {
         failCont;
     std::vector<std::list<FailNode>> failList(numV);
 
+    std::cout << numE << std::endl;
+
     int lastChk = 0; // for debug
     int lastCount = 0;
 
@@ -227,8 +235,8 @@ void HRG_CLIQUE::CNEEObuilder::CNEEO_ver2() {
             }
         } else {
             failCont.push_back({it1, it2});
-            failList[u].push_back({v, failList[u].end(), prev(failCont.end())});
-            failList[v].push_back({u, failList[v].end(), prev(failCont.end())});
+            failList[u].push_back({v, failList[v].end(), prev(failCont.end())});
+            failList[v].push_back({u, failList[u].end(), prev(failCont.end())});
             failList[u].back().failList_it = prev(failList[v].end());
             failList[v].back().failList_it = prev(failList[u].end());
         }
@@ -239,4 +247,6 @@ void HRG_CLIQUE::CNEEObuilder::CNEEO_ver2() {
         fails.push_back({*failCont.front().first, *failCont.front().second});
         failCont.pop_front();
     }
+
+    std::cout << "END building CNEEO" << std::endl;
 }

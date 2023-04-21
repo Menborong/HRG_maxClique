@@ -10,10 +10,13 @@ int main(int argc, char *argv[]){
     fin >> N >> M;
 
     vector<pair<int, int>> edges;
+    set<int> ST;
     for(int i=0; i<M; i++){
         int u, v;
         fin >> u >> v;
-        edges.push_back({u, v});
+        if(u == v) continue;
+        edges.push_back({min(u, v), max(u, v)});
+        ST.insert(u); ST.insert(v);
     }
 
     map<int, int> comp;
@@ -28,7 +31,7 @@ int main(int argc, char *argv[]){
     }
 
     ofstream fout(out_name);
-    fout << N << " " << M << '\n';
+    fout << ST.size() << " " << edges.size() << '\n';
     for(auto [u, v]: edges){
         fout << comp[u] << " " << comp[v] << '\n';
     }
