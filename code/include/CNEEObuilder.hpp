@@ -9,7 +9,7 @@ namespace HRG_CLIQUE {
 class CNEEObuilder {
    public:
     CNEEObuilder(){};  // default constructor for non initialized CNEEObuilder
-    CNEEObuilder(std::vector<std::vector<int>>& adjs, int N, int version = 2);
+    CNEEObuilder(std::vector<std::vector<int>> adjs, int numV, int version = 2);
     std::vector<std::pair<int, int>>& getCNEEO() { return CNEEO; }
     std::vector<std::pair<int, int>>& getFails() { return fails; }
 
