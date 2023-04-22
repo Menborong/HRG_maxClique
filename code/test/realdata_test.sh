@@ -5,10 +5,10 @@ out_dir="../../results/runtime_general_result"
 mkdir $out_dir
 
 versions=("2" "1")
-# filenames=("soc-Epinions1" "Slashdot0811" "Slashdot0902" "Gnutella31" "web-Stanford" "Wiki-Vote" "com-lj" "web-Google" "web-BerkStan" "com-dblp" "com-amazon" "as-skitter" "soc-pokec" "com-youtube" "WikiTalk" "web-NotreDame" "ca-AstroPh" "ca-CondMat" "ca-HepPh")
+filenames=("soc-Epinions1" "Slashdot0811" "Slashdot0902" "Gnutella31" "web-Stanford" "Wiki-Vote" "com-lj" "web-Google" "web-BerkStan" "com-dblp" "com-amazon" "as-skitter" "soc-pokec" "com-youtube" "WikiTalk" "web-NotreDame" "ca-AstroPh" "ca-CondMat" "ca-HepPh")
 # filenames=("com-dblp" "com-amazon" "as-skitter" "soc-pokec" "com-youtube" "WikiTalk" "web-NotreDame" "ca-AstroPh" "ca-CondMat" "ca-HepPh")
 
-filenames=("web-BerkStan")
+# filenames=("web-BerkStan")
 
 for filename in "${filenames[@]}"; do
     for version in "${versions[@]}"; do
