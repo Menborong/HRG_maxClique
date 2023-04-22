@@ -239,8 +239,6 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV2() {
         newAdjs[v].push_back(u);
     }
 
-    std::cout << CNEEO.size() <<  ' ' << failedEdges.size() << std::endl;
-
     // main iteration
     for (int i = CNEEO.size() - 1; i >= 0; i--) {
         int u = CNEEO[i].first;

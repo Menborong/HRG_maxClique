@@ -9,15 +9,17 @@ int main(int argc, char *argv[]){
     int N, M;
     fin >> N >> M;
 
-    vector<pair<int, int>> edges;
+    set<pair<int, int>> edges;
     set<int> ST;
     for(int i=0; i<M; i++){
         int u, v;
         fin >> u >> v;
         if(u == v) continue;
-        edges.push_back({min(u, v), max(u, v)});
+        edges.insert({min(u, v), max(u, v)});
         ST.insert(u); ST.insert(v);
     }
+
+    fin.close();
 
     map<int, int> comp;
     int cnt = 0;

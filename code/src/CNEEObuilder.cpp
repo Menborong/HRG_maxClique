@@ -54,8 +54,6 @@ HRG_CLIQUE::CNEEObuilder::CNEEObuilder(std::vector<std::vector<int>> adjs, int n
 
 void HRG_CLIQUE::CNEEObuilder::getCommonNeighbors(int u, int v)
 {
-    assert(V.size() == 0);
-
     // get common neighbors
     for (int w : adjList[u]) {
         if (w == v) continue;
@@ -192,8 +190,6 @@ void HRG_CLIQUE::CNEEObuilder::CNEEO_ver2() {
         failCont;
     std::vector<std::list<FailNode>> failList(numV);
 
-    std::cout << numE << std::endl;
-
     int lastChk = 0; // for debug
     int lastCount = 0;
 
@@ -247,6 +243,4 @@ void HRG_CLIQUE::CNEEObuilder::CNEEO_ver2() {
         fails.push_back({*failCont.front().first, *failCont.front().second});
         failCont.pop_front();
     }
-
-    std::cout << "END building CNEEO" << std::endl;
 }
