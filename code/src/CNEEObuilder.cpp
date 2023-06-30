@@ -73,11 +73,9 @@ void HRG_CLIQUE::CNEEObuilder::getCommonNeighbors(int u, int v) {
 void HRG_CLIQUE::CNEEObuilder::clearCommonCache(int u, int v) {
     // clear cache
     for (int tar : adjList[u]) {
-        if (tar == v) continue;
         VBits[tar] = 0;
     }
     for (int tar : adjList[v]) {
-        if (tar == u) continue;
         VBits[tar] = 0;
     }
 }
