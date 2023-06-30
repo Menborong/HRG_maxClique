@@ -1,6 +1,7 @@
 #include <vector>
 #include <cassert>
 #include <algorithm>
+#include <iostream>
 
 #include "MaximumClique.hpp"
 #include "CNEEObuilder.hpp"
@@ -216,7 +217,7 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV2() {
     int redSize = red.getRedSize();
 
     // construct CNEEO
-    CNEEObuilder CNEEObuild(adjs_red, redSize);
+    CNEEObuilder CNEEObuild(adjs_red, redSize, 2);
     std::vector<std::pair<int, int>> CNEEO = CNEEObuild.getCNEEO();
 
     // reconstruct the graph
