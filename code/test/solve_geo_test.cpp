@@ -1,11 +1,11 @@
 #include <fstream>
 
-#include "MaximumClique.hpp"
 #include "Graph.hpp"
+#include "MaximumClique.hpp"
 
-// input_graph input_geometry output_filename (version) 
+// input_graph input_geometry output_filename (version)
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[]) {
     std::ifstream ifs;
     // read graph
     std::string FILENAME1 = argv[1];
@@ -14,7 +14,7 @@ int main(int argc, char *argv[]){
     ifs >> n >> m;
 
     std::vector<std::vector<int>> adjs(n);
-    for(int i=0; i<m; i++){
+    for (int i = 0; i < m; i++) {
         int a, b;
         ifs >> a >> b;
         adjs[a].push_back(b);
@@ -29,15 +29,14 @@ int main(int argc, char *argv[]){
     double R;
     ifs >> R;
     std::vector<HRG_CLIQUE::Node> geo(n);
-    for(int i=0; i<n; i++){
+    for (int i = 0; i < n; i++) {
         ifs >> geo[i].r >> geo[i].phi;
     }
     ifs.close();
 
-    string OUTFILE = argv[3];
+    std::string OUTFILE = argv[3];
     int version = 0;
-    if(argc > 4)
-        version = atoi(argv[4]);
+    if (argc > 4) version = atoi(argv[4]);
 
     // time measurement
     double start = clock();
@@ -56,7 +55,7 @@ int main(int argc, char *argv[]){
     ofs.open(OUTFILE, std::ios::app);
     int clique_size = clique.size();
     ofs << clique_size << std::endl;
-    for(int i=0; i<clique_size; i++){
+    for (int i = 0; i < clique_size; i++) {
         ofs << clique[i] << " ";
     }
     ofs << std::endl;

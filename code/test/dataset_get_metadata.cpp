@@ -5,7 +5,7 @@ double calculateRadius(int n, double alpha, int deg) {
                    (deg * (alpha - 0.5) * (alpha - 0.5)));
 }
 
-int main(int argc, char* argv[]){
+int main(int argc, char* argv[]) {
     int N = atoi(argv[1]);
     double alpha = atof(argv[2]);
     double deg = atof(argv[3]);

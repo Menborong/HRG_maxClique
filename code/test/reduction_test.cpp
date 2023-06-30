@@ -1,10 +1,11 @@
+#include "Reduction.hpp"
+
 #include <fstream>
 
-#include "MaximalClique.hpp"
-#include "Reduction.hpp"
 #include "Graph.hpp"
+#include "MaximalClique.hpp"
 
-// input_filename 
+// input_filename
 
 int main(int argc, char *argv[]) {
     (void)argc;
