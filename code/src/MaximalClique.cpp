@@ -1,6 +1,6 @@
-#include <vector>
-
 #include "MaximalClique.hpp"
+
+#include <vector>
 
 std::vector<int> HRG_CLIQUE::getMaximalClique(
     const std::vector<std::vector<int>>& adjs, const int N) {
@@ -11,7 +11,7 @@ std::vector<int> HRG_CLIQUE::getMaximalClique(
         degrees[adjs[i].size()].push_back(i);
     }
     std::vector<int> sorted;
-    for (int i = N-1; i >= 0; i--) {
+    for (int i = N - 1; i >= 0; i--) {
         int degSize = degrees[i].size();
         for (int j = 0; j < degSize; j++) {
             sorted.push_back(degrees[i][j]);

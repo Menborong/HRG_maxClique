@@ -1,20 +1,20 @@
-#include <vector>
-#include <cassert>
-#include <algorithm>
-#include <iostream>
-
 #include "MaximumClique.hpp"
+
+#include <algorithm>
+#include <cassert>
+#include <iostream>
+#include <vector>
+
+#include "BipartiteIndep.hpp"
 #include "CNEEObuilder.hpp"
 #include "Graph.hpp"
 #include "MaximalClique.hpp"
 #include "Reduction.hpp"
-#include "BipartiteIndep.hpp"
-
 
 void HRG_CLIQUE::MaxClique::run() {
     // initalize solution
-    maxClique = vector<int>();
-    failedEdges = vector<std::pair<int, int>>();
+    maxClique = std::vector<int>();
+    failedEdges = std::vector<std::pair<int, int>>();
 
     // with geometry
     if (hasGeo) {
@@ -80,10 +80,10 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV1() {
     // construct CNEEO
     CNEEObuilder CNEEObuild(adjs_red, redSize, 1);
     std::vector<std::pair<int, int>> CNEEO = CNEEObuild.getCNEEO();
-    
+
     // reconstruct the graph
     // add the edges in reverse order of CNEEO
-    std::vector<vector<int>> newAdjs(redSize);
+    std::vector<std::vector<int>> newAdjs(redSize);
 
     // this adjs matrix is reuse for the efficiency
     std::vector<std::vector<int>> cobipartite(redSize);
@@ -93,7 +93,7 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV1() {
     // add all failed edges to new adjacnet matrix
     failedEdges = CNEEObuild.getFails();
     int failSize = failedEdges.size();
-    for(int i=0; i<failSize; i++){
+    for (int i = 0; i < failSize; i++) {
         int u = failedEdges[i].first;
         int v = failedEdges[i].second;
         newAdjs[u].push_back(v);
@@ -222,7 +222,7 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV2() {
 
     // reconstruct the graph
     // add the edges in reverse order of CNEEO
-    std::vector<vector<int>> newAdjs(redSize);
+    std::vector<std::vector<int>> newAdjs(redSize);
 
     // this adjs matrix is reuse for the efficiency
     std::vector<std::vector<int>> cobipartite(redSize);
@@ -232,7 +232,7 @@ void HRG_CLIQUE::MaxClique::maxCliqueNoGeoV2() {
     // add all failed edges to new adjacnet matrix
     failedEdges = CNEEObuild.getFails();
     int failSize = failedEdges.size();
-    for(int i=0; i<failSize; i++){
+    for (int i = 0; i < failSize; i++) {
         int u = failedEdges[i].first;
         int v = failedEdges[i].second;
         newAdjs[u].push_back(v);
@@ -382,7 +382,6 @@ void HRG_CLIQUE::MaxClique::maxCliqueGeoV1() {
                 getBipartiteIndep(vertices, cobipartite);
             candidate.push_back(u);
             candidate.push_back(v);
-            
 
             // update solution
             if (candidate.size() > maxClique.size()) {
@@ -570,8 +569,8 @@ void HRG_CLIQUE::MaxClique::maxCliqueGeoV4() {
     std::sort(edges.begin(), edges.end(),
               [](const Edge& a, const Edge& b) { return a.d > b.d; });
 
-    std::vector<vector<int>> newAdjs(redSize);
-    std::vector<vector<int>> cobipartite(redSize);
+    std::vector<std::vector<int>> newAdjs(redSize);
+    std::vector<std::vector<int>> cobipartite(redSize);
     std::vector<int> commonCache(redSize, 0);
     std::vector<int> neighborCache(redSize, 0);
 

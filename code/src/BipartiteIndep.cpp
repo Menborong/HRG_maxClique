@@ -1,11 +1,11 @@
-#include <vector>
-#include <queue>
-#include <cassert>
-
 #include "BipartiteIndep.hpp"
 
-void HRG_CLIQUE::MinVertexCover::bfs(){
-    queue<int> q;
+#include <cassert>
+#include <queue>
+#include <vector>
+
+void HRG_CLIQUE::MinVertexCover::bfs() {
+    std::queue<int> q;
     // initialize level graph
     for (int x = 0; x < NX; x++) {
         if (XtoY[x] != -1)
@@ -28,7 +28,7 @@ void HRG_CLIQUE::MinVertexCover::bfs(){
     }
 }
 
-bool HRG_CLIQUE::MinVertexCover::dfs(int x){
+bool HRG_CLIQUE::MinVertexCover::dfs(int x) {
     int adjSize = adjs[x].size();
     for (int& i = list[x]; i < adjSize; i++) {
         int y = adjs[x][i];
@@ -73,12 +73,11 @@ void HRG_CLIQUE::MinVertexCover::minVertexCover() {
     }
 }
 
-
 std::vector<int> HRG_CLIQUE::minVCCache1;
 std::vector<int> HRG_CLIQUE::minVCCache2;
 
 std::vector<int> HRG_CLIQUE::getBipartiteIndep(
-    std::vector<int> V, std::vector<std::vector<int>> &adjs) {
+    std::vector<int> V, std::vector<std::vector<int>>& adjs) {
     // reconstruct:
     // construct bipartite graph G = (X, Y, E)
     // X = {1, 2, ..., NX}
@@ -88,7 +87,7 @@ std::vector<int> HRG_CLIQUE::getBipartiteIndep(
     for (int v : V) {
         if ((int)minVCCache1.size() <= v) minVCCache1.resize(v + 1, 0);
         if (minVCCache1[v]) continue;
-        queue<int> q;
+        std::queue<int> q;
         q.push(v);
         minVCCache1[v] = 1;
         // BFS scheme
@@ -105,12 +104,15 @@ std::vector<int> HRG_CLIQUE::getBipartiteIndep(
         }
     }
 
-    // relabeling to bipartite graph X = {0, 1, 2, ..., NX - 1}, Y = {0, 1, 2, ..., NY - 1}
+    // relabeling to bipartite graph X = {0, 1, 2, ..., NX - 1}, Y = {0, 1, 2,
+    // ..., NY - 1}
     int NX = 0, NY = 0;
     for (int v : V) {
-        if((int)minVCCache2.size() <= v) minVCCache2.resize(v + 1, 0);
-        if (minVCCache1[v] == 1) minVCCache2[v] = NX++;
-        else if (minVCCache1[v] == 2) minVCCache2[v] = NY++;
+        if ((int)minVCCache2.size() <= v) minVCCache2.resize(v + 1, 0);
+        if (minVCCache1[v] == 1)
+            minVCCache2[v] = NX++;
+        else if (minVCCache1[v] == 2)
+            minVCCache2[v] = NY++;
     }
 
     // get the minimum vertex cover

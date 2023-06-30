@@ -14,25 +14,33 @@ class CNEEObuilder {
     std::vector<std::pair<int, int>>& getFails() { return fails; }
 
    private:
-    // int N;
-    // int leftEdges;
     int numV;
     int numE;
-    std::vector<std::vector<int>> adjs; // input graph
-    std::vector<std::vector<int>> adjsC; // complement graph of induced subgraph of common neighbors
-    std::vector<std::list<int>> adjList; // subgraph of remaining edges
+    // input graph
+    std::vector<std::vector<int>> adjs;
+    // complement graph of induced subgraph of common neighbors
+    std::vector<std::vector<int>> adjsC;
+    // subgraph of remaining edges
+    std::vector<std::list<int>> adjList;
 
     // cache list
-    std::vector<int> cache_color; // cache for 2-coloring
-    std::vector<int> cache_neighbor; // cache for finding complement graph
-    std::vector<int> V; // common neighbors
-    std::vector<int> VBits; // common neighbors bitset
+    // cache for 2-coloring
+    std::vector<int> cache_color;
+    // cache for finding complement graph
+    std::vector<int> cache_neighbor;
+    // common neighbors
+    std::vector<int> V;
+    // common neighbors bitset
+    std::vector<int> VBits;
 
-    std::vector<std::pair<int, int>> CNEEO; // solution
-    std::vector<std::pair<int, int>> fails; // failed edges (if input graph does not accept CNEEO)
+    // solution
+    std::vector<std::pair<int, int>> CNEEO;
+    // failed edges (if input graph does not accept CNEEO)
+    std::vector<std::pair<int, int>> fails;
 
+    // queue of edges that have potential to be added
     std::queue<std::pair<std::list<int>::iterator, std::list<int>::iterator>>
-        edgeQ; // queue of edges that have potential to be added
+        edgeQ;
 
     // only use for version 2
     struct FailNode {
@@ -41,6 +49,7 @@ class CNEEObuilder {
         std::list<std::pair<std::list<int>::iterator,
                             std::list<int>::iterator>>::iterator failCont_it;
     };
+
     /**
      * @brief the common neighbors of u and v are stored in V.
      * VBits[v] = 1 if v is in V
@@ -54,14 +63,14 @@ class CNEEObuilder {
     bool chkCoBip();
     /**
      * @brief basic version of constructing CNEEO
-     * @details time complexity: O(N^2 M^2), loop until no more edges can be
+     * @details time complexity: O(M^3), loop until no more edges can be
      * added
      */
     void CNEEO_ver1();
 
     /**
      * @brief optimized version of constructing CNEEO
-     * @details time complexity: O(N^2 M^2), only edges that have potential to
+     * @details time complexity: O(M^3), only edges that have potential to
      * be added are considered
      */
     void CNEEO_ver2();

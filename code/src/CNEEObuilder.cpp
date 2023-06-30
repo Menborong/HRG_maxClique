@@ -1,12 +1,13 @@
-#include <vector>
-#include <cassert>
-#include <queue>
-#include <list>
-#include <iostream>
-
 #include "CNEEObuilder.hpp"
 
-HRG_CLIQUE::CNEEObuilder::CNEEObuilder(std::vector<std::vector<int>> adjs, int numV, int version) {
+#include <cassert>
+#include <iostream>
+#include <list>
+#include <queue>
+#include <vector>
+
+HRG_CLIQUE::CNEEObuilder::CNEEObuilder(std::vector<std::vector<int>> adjs,
+                                       int numV, int version) {
     this->numV = numV;
     this->numE = 0;
     for (int u = 0; u < numV; u++) {
@@ -19,7 +20,8 @@ HRG_CLIQUE::CNEEObuilder::CNEEObuilder(std::vector<std::vector<int>> adjs, int n
     this->adjsC = std::vector<std::vector<int>>(numV);
     this->adjList = std::vector<std::list<int>>(numV);
 
-    edgeQ = std::queue<std::pair<std::list<int>::iterator, std::list<int>::iterator>>();
+    edgeQ = std::queue<
+        std::pair<std::list<int>::iterator, std::list<int>::iterator>>();
     for (int u = 0; u < numV; u++) {
         for (int v : adjs[u]) {
             if (u > v) continue;
@@ -52,8 +54,7 @@ HRG_CLIQUE::CNEEObuilder::CNEEObuilder(std::vector<std::vector<int>> adjs, int n
     }
 }
 
-void HRG_CLIQUE::CNEEObuilder::getCommonNeighbors(int u, int v)
-{
+void HRG_CLIQUE::CNEEObuilder::getCommonNeighbors(int u, int v) {
     // get common neighbors
     for (int w : adjList[u]) {
         if (w == v) continue;
@@ -66,7 +67,7 @@ void HRG_CLIQUE::CNEEObuilder::getCommonNeighbors(int u, int v)
             VBits[w]++;
         }
     }
-    for(int w : adjList[u]){
+    for (int w : adjList[u]) {
         if (w == v) continue;
         VBits[w]--;
     }
@@ -85,52 +86,50 @@ void HRG_CLIQUE::CNEEObuilder::clearCommonCache(int u, int v) {
 
 bool HRG_CLIQUE::CNEEObuilder::chkCoBip() {
     long long numPartV = V.size();
-    if(numPartV == 0) return true;
+    if (numPartV == 0) return true;
 
     // check if the # of vertices is too large
-    if (numE < (numPartV*numPartV)/2) return false;
+    if (numE < (numPartV * numPartV) / 2) return false;
 
     // now |V'| = O(sqrt(|E|))
 
     // construct complement graph
-    for (int u: V){
-        for(int v: adjs[u])
-            if(VBits[v]) cache_neighbor[v] = 1;
-        for(int v: V){
-            if(u == v) continue;
-            if(cache_neighbor[v] == 0)
-                adjsC[u].push_back(v);
+    for (int u : V) {
+        for (int v : adjs[u])
+            if (VBits[v]) cache_neighbor[v] = 1;
+        for (int v : V) {
+            if (u == v) continue;
+            if (cache_neighbor[v] == 0) adjsC[u].push_back(v);
         }
-        for(int v: adjs[u])
-            if(VBits[v]) cache_neighbor[v] = 0;
+        for (int v : adjs[u])
+            if (VBits[v]) cache_neighbor[v] = 0;
     }
 
     // check if the complement graph is bipartite
     bool is_bip = true;
-    for (int u: V){
-        if(cache_color[u]) continue;
+    for (int u : V) {
+        if (cache_color[u]) continue;
         std::queue<int> q;
         q.push(u);
         cache_color[u] = 1;
-        while(!q.empty()){
+        while (!q.empty()) {
             int v = q.front();
             q.pop();
-            for(int w: adjsC[v]){
-                if(cache_color[w] == 0){
+            for (int w : adjsC[v]) {
+                if (cache_color[w] == 0) {
                     cache_color[w] = 3 ^ cache_color[v];
                     q.push(w);
-                }
-                else if(cache_color[w] == cache_color[v]){
+                } else if (cache_color[w] == cache_color[v]) {
                     is_bip = false;
                     break;
                 }
             }
-            if(!is_bip) break;
+            if (!is_bip) break;
         }
     }
 
     // clear cache
-    for (int u: V){
+    for (int u : V) {
         adjsC[u].clear();
         cache_color[u] = 0;
     }
@@ -139,11 +138,10 @@ bool HRG_CLIQUE::CNEEObuilder::chkCoBip() {
 }
 
 void HRG_CLIQUE::CNEEObuilder::CNEEO_ver1() {
-
     std::queue<std::pair<std::list<int>::iterator, std::list<int>::iterator>>
         failCont;
-        
-    int lastChk = 0; // for debug
+
+    int lastChk = 0;  // for debug
     int lastCount = 0;
 
     while (!edgeQ.empty()) {
@@ -168,12 +166,12 @@ void HRG_CLIQUE::CNEEObuilder::CNEEO_ver1() {
             }
 
             lastCount++;
-            if(lastChk < lastCount){
-                lastChk += numE/100;
+            if (lastChk < lastCount) {
+                lastChk += numE / 100;
                 std::cout << "\rprogress: " << lastCount << "/" << numE;
                 std::cout.flush();
             }
-            
+
         } else {
             failCont.push({it1, it2});
         }
@@ -191,7 +189,7 @@ void HRG_CLIQUE::CNEEObuilder::CNEEO_ver2() {
         failCont;
     std::vector<std::list<FailNode>> failList(numV);
 
-    int lastChk = 0; // for debug
+    int lastChk = 0;  // for debug
     int lastCount = 0;
 
     while (!edgeQ.empty()) {
@@ -225,8 +223,8 @@ void HRG_CLIQUE::CNEEObuilder::CNEEO_ver2() {
             failList[v].clear();
 
             lastCount++;
-            if(lastChk < lastCount){
-                lastChk += numE/100;
+            if (lastChk < lastCount) {
+                lastChk += numE / 100;
                 std::cout << "\rprogress: " << lastCount << "/" << numE;
                 std::cout.flush();
             }

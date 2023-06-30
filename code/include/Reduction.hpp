@@ -7,7 +7,6 @@ namespace HRG_CLIQUE {
 
 class Reduction {
    public:
-
     /// @brief Apply the reduction algorithm to the graph in time $O(N+M)$
     /// @details When init size is $\Omega(n^{1-\alpha})$, then
     /// the reduced size of the graph is $O(n^{1-\alpha})$ with high probability
@@ -16,7 +15,7 @@ class Reduction {
     /// @param initSize the initial size of the clique
     Reduction(const std::vector<std::vector<int>>& adjs, const int N,
               const int initSize);
-    
+
     /// @brief Apply the reduction algorithm to the graph in time $O(N+M)$
     /// @details When init size is $\Omega(n^{1-\alpha})$, then
     /// the reduced size of the graph is $O(n^{1-\alpha})$ with high probability
